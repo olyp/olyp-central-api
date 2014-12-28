@@ -17,26 +17,6 @@
   [ctx]
   (or (:datomic-db-after ctx) (-> ctx :request :datomic-db)))
 
-(defn etag-from-datomic [ctx]
-  (d/basis-t (get-datomic-db ctx)))
-
-(defn last-modified-from-datomic-db-inner [db]
-  (->> db
-       d/basis-t
-       d/t->tx
-       (d/entity db)
-       :db/txInstant))
-
-(defn last-modified-from-datomic-db [ctx]
-  (let [db (get-datomic-db ctx)]
-    (last-modified-from-datomic-db-inner db)))
-
-(defn last-modified-from-datomic-entity [ctx]
-  (let [entity (:datomic-entity ctx)]
-    (->> entity
-         (d/entity-db)
-         (last-modified-from-datomic-db-inner))))
-
 (defn comp-decision [^Boolean truthyness fns]
   (fn [initial-ctx]
     (reduce

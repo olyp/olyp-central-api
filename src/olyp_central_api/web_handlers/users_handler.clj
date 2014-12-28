@@ -18,8 +18,6 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:post :get]
-   :etag liberator-util/etag-from-datomic
-   :last-modified liberator-util/last-modified-from-datomic-db
    :processable? (liberator-util/comp-pos-decision
                   liberator-util/processable-json?
                   (liberator-util/make-json-validator user-factory/validate-user-on-create))
@@ -49,8 +47,6 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:put :get :delete]
-   :etag liberator-util/etag-from-datomic
-   :last-modified liberator-util/last-modified-from-datomic-entity
    :processable? (liberator-util/comp-pos-decision
                   liberator-util/processable-json?
                   (liberator-util/make-json-validator user-factory/validate-user-on-create))
