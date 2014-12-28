@@ -20,27 +20,57 @@
 (defn etag-from-datomic [ctx]
   (d/basis-t (get-datomic-db ctx)))
 
+(defn last-modified-from-datomic-db-inner [db]
+  (->> db
+       d/basis-t
+       d/t->tx
+       (d/entity db)
+       :db/txInstant))
+
 (defn last-modified-from-datomic-db [ctx]
   (let [db (get-datomic-db ctx)]
-    (->> db
-         d/basis-t
-         d/t->tx
-         (d/entity db)
-         :db/txInstant)))
+    (last-modified-from-datomic-db-inner db)))
 
-(defn last-modified-from-datomic-entity [ctx])
+(defn last-modified-from-datomic-entity [ctx]
+  (let [entity (:datomic-entity ctx)]
+    (->> entity
+         (d/entity-db)
+         (last-modified-from-datomic-db-inner))))
+
+(defn comp-decision [^Boolean truthyness fns]
+  (fn [initial-ctx]
+    (loop [ctx initial-ctx
+           rest-fns (rest fns)
+           cur-fn (first fns)]
+      (if cur-fn
+        (let [decision (cur-fn ctx)
+              result (if (vector? decision) (first decision) decision)
+              context-update (if (vector? decision) (second decision) decision)]
+          (if (= truthyness (boolean result))
+            (recur (liberator.core/update-context ctx context-update)
+                   (rest rest-fns)
+                   (first rest-fns))
+            decision))
+        ctx))))
+
+(defn comp-pos-decision [& fns]
+  (comp-decision true fns))
+
+(defn comp-neg-decision [& fns]
+  (comp-decision false fns))
+
+(defn make-json-validator [validator]
+  (fn [ctx]
+    (if-let [json (:olyp-json ctx)]
+      (let [err (validator json)]
+        (if (empty? err)
+          true
+          [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string err)}]))
+      true)))
 
 (def potentially-unprocessable-methods #{:post :put})
 
-(defn processable-json? [{{:keys [body request-method]} :request}]
-  (if (contains? potentially-unprocessable-methods request-method)
-    (try
-      {:olyp-json (-> body slurp cheshire.core/parse-string)}
-      (catch JsonParseException e
-        [false {:olyp-json-parse-exception e}]))
-    true))
-
-(defn handle-unprocessable-json-entity [{e :olyp-json-parse-exception}]
+(defn get-unprocessable-entity-msg [^JsonParseException e]
   (let [location (.getLocation e)
         original-message (.getOriginalMessage e)]
     (cheshire.core/generate-string
@@ -48,16 +78,16 @@
       :location {:line (.getLineNr location) :col (.getColumnNr location) :source-ref (str (.getSourceRef location))}
       :original-message original-message})))
 
-(def default-datomic-json-collection-resource
-  {:available-media-types ["application/json"]
-   :allowed-methods [:post :get]
-   :etag etag-from-datomic
-   :last-modified last-modified-from-datomic-db
-   :processable? processable-json?
-   :handle-unprocessable-entity handle-unprocessable-json-entity})
+(defn processable-json? [{{:keys [body request-method]} :request}]
+  (if (contains? potentially-unprocessable-methods request-method)
+    (try
+      {:olyp-json (-> body slurp cheshire.core/parse-string)}
+      (catch JsonParseException e
+        [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}]))
+    true))
 
-(defn datomic-json-collection-resource [& kvs]
-  (resource (merge default-datomic-json-collection-resource (apply hash-map kvs))))
+(defn handle-unprocessable-entity [ctx]
+  (:olyp-unprocessable-entity-msg ctx))
 
 (def default-datomic-json-resource
   {:available-media-types ["application/json"]
@@ -66,7 +96,7 @@
    :last-modified last-modified-from-datomic-entity
    :processable? processable-json?
    :can-put-to-missing? false
-   :handle-unprocessable-entity handle-unprocessable-json-entity})
+   :handle-unprocessable-entity handle-unprocessable-entity})
 
 (defn datomic-json-resource [& kvs]
   (resource (merge default-datomic-json-resource (apply hash-map kvs))))

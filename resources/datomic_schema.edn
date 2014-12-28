@@ -31,8 +31,8 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :user/password
-     :db/valueType :db.type/bytes
+     :db/ident :user/bcrypt-password
+     :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 

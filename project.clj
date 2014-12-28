@@ -10,6 +10,8 @@
                  [bidi "1.12.0"]
                  [liberator "0.12.2"]
                  [cheshire "5.3.1"]
+                 [com.novemberain/validateur "2.4.2"]
+                 [crypto-random "1.2.0"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.2"]]
   :main olyp-central-api.main

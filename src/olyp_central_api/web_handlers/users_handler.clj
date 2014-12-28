@@ -2,7 +2,8 @@
   (:require [datomic.api :as d]
             [olyp-central-api.factories.user-factory :as user-factory]
             [olyp-central-api.liberator-util :as liberator-util]
-            [cheshire.core])
+            [cheshire.core]
+            [liberator.core :refer [resource]])
   (:import [java.util UUID]))
 
 (defn user-ent-to-public-value [ent]
@@ -11,7 +12,16 @@
    :name (:user/name ent)})
 
 (def users-collection-handler
-  (liberator-util/datomic-json-collection-resource
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:post :get]
+   :etag liberator-util/etag-from-datomic
+   :last-modified liberator-util/last-modified-from-datomic-db
+   :processable? (liberator-util/comp-pos-decision
+                  liberator-util/processable-json?
+                  (liberator-util/make-json-validator user-factory/validate-user-on-create))
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
    :post!
    (fn [{{:keys [body datomic-conn]} :request :as ctx}]
      (-> (:olyp-json ctx)
