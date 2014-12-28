@@ -2,6 +2,7 @@
   (:require [datomic.api :as d]
             [olyp-central-api.factories.user-factory :as user-factory]
             [olyp-central-api.liberator-util :as liberator-util]
+            [olyp-central-api.datomic-util :as datomic-util]
             [cheshire.core]
             [liberator.core :refer [resource]])
   (:import [java.util UUID]))
@@ -13,8 +14,7 @@
    :zip (:user/zip ent)
    :city (:user/city ent)
    :auth-token (:user/auth-token ent)
-   :version (let [db (d/entity-db ent)]
-              (d/tx->t (ffirst (d/q '[:find (max ?tx) :in $ ?eid :where [?eid _ _ ?tx]]  db (:db/id ent)))))})
+   :version (datomic-util/get-most-recent-t ent)})
 
 (def users-collection-handler
   (resource
