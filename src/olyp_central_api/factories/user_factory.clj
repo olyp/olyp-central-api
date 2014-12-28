@@ -30,6 +30,9 @@
     [(v/all-keys-in #{"email" "name" "zip" "city"})]
     user-base-validators)))
 
+(defn encrypt-password [password]
+  (crypto.password.bcrypt/encrypt password 11))
+
 (defn create-user [data datomic-conn]
   (let [user-tempid (d/tempid :db.part/user)
         tx-res @(d/transact
@@ -39,7 +42,7 @@
                   [:db/add user-tempid :user/name (data "name")]
                   [:db/add user-tempid :user/zip (data "zip")]
                   [:db/add user-tempid :user/city (data "city")]
-                  [:db/add user-tempid :user/bcrypt-password (crypto.password.bcrypt/encrypt (data "password") 11)]
+                  [:db/add user-tempid :user/bcrypt-password (encrypt-password (data "password"))]
                   [:db/add user-tempid :user/auth-token (crypto.random/hex 32)]])]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) user-tempid))))
 
