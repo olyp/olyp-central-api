@@ -39,19 +39,16 @@
 
 (defn comp-decision [^Boolean truthyness fns]
   (fn [initial-ctx]
-    (loop [ctx initial-ctx
-           rest-fns (rest fns)
-           cur-fn (first fns)]
-      (if cur-fn
-        (let [decision (cur-fn ctx)
-              result (if (vector? decision) (first decision) decision)
-              context-update (if (vector? decision) (second decision) decision)]
-          (if (= truthyness (boolean result))
-            (recur (liberator.core/update-context ctx context-update)
-                   (rest rest-fns)
-                   (first rest-fns))
-            decision))
-        ctx))))
+    (reduce
+     (fn [ctx decision-fn]
+       (let [decision (decision-fn ctx)
+             result (if (vector? decision) (first decision) decision)
+             context-update (if (vector? decision) (second decision) decision)]
+         (if (= truthyness (boolean result))
+           (liberator.core/update-context ctx context-update)
+           (reduced decision))))
+     initial-ctx
+     fns)))
 
 (defn comp-pos-decision [& fns]
   (comp-decision true fns))
