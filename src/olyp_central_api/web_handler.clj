@@ -9,7 +9,8 @@
                  [""
                   {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
                    "/users" users-handler/users-collection-handler
-                   "/users/" {[:user-id ""] users-handler/user-handler}}])]
+                   "/users/" {[:user-id ""] users-handler/user-handler}
+                   "/authenticate" users-handler/authenticate-user}])]
     (fn [req]
       (let [db (d/db datomic-conn)]
         (handler (assoc req

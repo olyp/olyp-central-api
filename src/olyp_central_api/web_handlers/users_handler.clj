@@ -1,6 +1,7 @@
 (ns olyp-central-api.web-handlers.users-handler
   (:require [datomic.api :as d]
             [olyp-central-api.factories.user-factory :as user-factory]
+            [olyp-central-api.queries.authentication-query :as authentication-query]
             [olyp-central-api.liberator-util :as liberator-util]
             [olyp-central-api.datomic-util :as datomic-util]
             [cheshire.core]
@@ -77,5 +78,26 @@
    :handle-ok
    (fn [ctx]
      (-> (:datomic-entity ctx)
+         user-ent-to-public-value
+         cheshire.core/generate-string))))
+
+(def authenticate-user
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:post]
+   :processable? (liberator-util/comp-pos-decision
+                  liberator-util/processable-json?
+                  (liberator-util/make-json-validator authentication-query/validate-authentication)
+                  (fn [{{:keys [datomic-db]} :request :keys [olyp-json]}]
+                    (if-let [user (d/entity datomic-db [:user/email (olyp-json "email")])]
+                      (if (authentication-query/valid-password? user (olyp-json "password"))
+                        {:authenticated-user user}
+                        [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:password #{"Incorrect password"}})}])
+                      [false {::olyp-unprocessable-entity-msg (cheshire.core/generate-string {:email #{"No user found with this e-mail"}})}])))
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :handle-created
+   (fn [ctx]
+     (-> (:authenticated-user ctx)
          user-ent-to-public-value
          cheshire.core/generate-string))))
