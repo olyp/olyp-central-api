@@ -9,7 +9,10 @@
 (defn user-ent-to-public-value [ent]
   {:id (str (:user/public-id ent))
    :email (:user/email ent)
-   :name (:user/name ent)})
+   :name (:user/name ent)
+   :zip (:user/zip ent)
+   :city (:user/city ent)
+   :auth-token (:user/auth-token ent)})
 
 (def users-collection-handler
   (resource
