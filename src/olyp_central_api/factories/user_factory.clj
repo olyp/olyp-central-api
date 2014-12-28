@@ -15,6 +15,9 @@
 (def user-creation-validators
   [(v/presence-of "password")])
 
+(def user-update-validators
+  [(v/presence-of "version")])
+
 (def validate-user-on-create
   (apply
    v/validation-set
@@ -27,8 +30,9 @@
   (apply
    v/validation-set
    (concat
-    [(v/all-keys-in #{"email" "name" "zip" "city"})]
-    user-base-validators)))
+    [(v/all-keys-in #{"email" "name" "zip" "city" "version"})]
+    user-base-validators
+    user-update-validators)))
 
 (defn encrypt-password [password]
   (crypto.password.bcrypt/encrypt password 11))
@@ -47,7 +51,15 @@
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) user-tempid))))
 
 (defn update-user [data ent datomic-conn]
-  ent)
+  (let [user-id (:db/id ent)
+        tx-res @(d/transact
+                 datomic-conn
+                 [[:optimistic-add (data "version") user-id
+                   {:user/email (data "email")
+                    :user/name (data "name")
+                    :user/zip (data "zip")
+                    :user/city (data "city")}]])]
+    (d/entity (:db-after tx-res) user-id)))
 
 (defn delete-user [ent datomic-conn]
   @(d/transact datomic-conn [[:db.fn/retractEntity (:db/id ent)]]))

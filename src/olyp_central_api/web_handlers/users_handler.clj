@@ -12,7 +12,9 @@
    :name (:user/name ent)
    :zip (:user/zip ent)
    :city (:user/city ent)
-   :auth-token (:user/auth-token ent)})
+   :auth-token (:user/auth-token ent)
+   :version (let [db (d/entity-db ent)]
+              (d/tx->t (ffirst (d/q '[:find (max ?tx) :in $ ?eid :where [?eid _ _ ?tx]]  db (:db/id ent)))))})
 
 (def users-collection-handler
   (resource
@@ -43,6 +45,13 @@
            (user-ent-to-public-value (d/entity db u)))
          (d/q '[:find ?u :where [?u :user/public-id]] db)))))))
 
+(defn get-user-entity-from-route-params [ctx]
+  (let [user-id (UUID/fromString (get-in ctx [:request :route-params :user-id]))
+        db (liberator-util/get-datomic-db ctx)]
+    (if-let [u-eid (ffirst (d/q '[:find ?u :in $ ?uid :where [?u :user/public-id ?uid]] db user-id))]
+      {:datomic-entity (d/entity db u-eid)})))
+
+
 (def user-handler
   (resource
    :available-media-types ["application/json"]
@@ -52,6 +61,8 @@
                   (liberator-util/make-json-validator user-factory/validate-user-on-update))
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+   :exists? get-user-entity-from-route-params
+   :existed? get-user-entity-from-route-params
 
    :put!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]
@@ -62,13 +73,6 @@
    (fn [{{:keys [datomic-conn]} :request :keys [datomic-entity]}]
      (-> (user-factory/delete-user datomic-entity datomic-conn)
          liberator-util/ctx-for-tx-res))
-
-   :exists?
-   (fn [ctx]
-     (let [user-id (UUID/fromString (get-in ctx [:request :route-params :user-id]))
-           db (liberator-util/get-datomic-db ctx)]
-       (if-let [u-eid (ffirst (d/q '[:find ?u :in $ ?uid :where [?u :user/public-id ?uid]] db user-id))]
-         {:datomic-entity (d/entity db u-eid)})))
 
    :handle-ok
    (fn [ctx]

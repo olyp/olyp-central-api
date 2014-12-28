@@ -134,4 +134,23 @@
      :db/valueType :db.type/bigint
      :db/cardinality :db.cardinality/one
      :db/doc "Stored as (* 100 price) as int, so we can (/ 100 price) to get the actual decimal value."
-     :db.install/_attribute :db.part/db}]]}}
+     :db.install/_attribute :db.part/db}
+
+
+    {:db/id #db/id[:db.part/user]
+     :db/ident :optimistic-add
+     :db/doc ":db/add with optimistic locking based on client-t"
+     :db/fn #db/fn {:lang "clojure"
+                    :params [db client-t eid updates]
+                    :code (do
+                            (doseq [[attr val] updates]
+                              (let [t (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
+                                          ffirst
+                                          datomic.api/tx->t)]
+                                (if (not= t client-t)
+                                  (throw (Exception. (str "Attribute " attr " optimistically locked! Client version is " client-t ", database version is " t "."))))))
+
+                            (let [client-ent (datomic.api/entity (datomic.api/as-of db client-t) eid)]
+                              (->> updates
+                                   (filter (fn [[attr val]] (not= val (attr client-ent))))
+                                   (map (fn [[attr val]] [:db/add eid attr val])))))}}]]}}
