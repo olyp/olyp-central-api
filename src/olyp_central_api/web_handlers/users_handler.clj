@@ -26,7 +26,7 @@
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
    :post!
-   (fn [{{:keys [body datomic-conn]} :request :as ctx}]
+   (fn [{{:keys [datomic-conn]} :request :as ctx}]
      (-> (:olyp-json ctx)
          (user-factory/create-user datomic-conn)
          liberator-util/ctx-for-entity))
@@ -58,7 +58,7 @@
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
    :put!
-   (fn [{{:keys [body datomic-conn]} :request :keys [olyp-json datomic-entity]}]
+   (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]
      (-> (user-factory/update-user olyp-json datomic-entity datomic-conn)
          liberator-util/ctx-for-entity))
 
