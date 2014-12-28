@@ -85,15 +85,3 @@
 
 (defn handle-unprocessable-entity [ctx]
   (:olyp-unprocessable-entity-msg ctx))
-
-(def default-datomic-json-resource
-  {:available-media-types ["application/json"]
-   :allowed-methods [:put :get :delete]
-   :etag etag-from-datomic
-   :last-modified last-modified-from-datomic-entity
-   :processable? processable-json?
-   :can-put-to-missing? false
-   :handle-unprocessable-entity handle-unprocessable-entity})
-
-(defn datomic-json-resource [& kvs]
-  (resource (merge default-datomic-json-resource (apply hash-map kvs))))

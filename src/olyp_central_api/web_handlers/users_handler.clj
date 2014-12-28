@@ -43,7 +43,17 @@
          (d/q '[:find ?u :where [?u :user/public-id]] db)))))))
 
 (def user-handler
-  (liberator-util/datomic-json-resource
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:put :get :delete]
+   :etag liberator-util/etag-from-datomic
+   :last-modified liberator-util/last-modified-from-datomic-entity
+   :processable? (liberator-util/comp-pos-decision
+                  liberator-util/processable-json?
+                  (liberator-util/make-json-validator user-factory/validate-user-on-create))
+   :can-put-to-missing? false
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
    :put!
    (fn [{{:keys [body datomic-conn]} :request :keys [olyp-json datomic-entity]}]
      (-> (user-factory/update-user olyp-json datomic-entity datomic-conn)
