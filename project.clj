@@ -7,6 +7,9 @@
                  [http-kit "2.1.16"]
                  [crypto-password "0.1.3"]
                  [io.rkn/conformity "0.3.3"]
+                 [bidi "1.12.0"]
+                 [liberator "0.12.2"]
+                 [cheshire "5.3.1"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.2"]]
   :main olyp-central-api.main

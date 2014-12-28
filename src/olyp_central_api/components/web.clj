@@ -1,7 +1,8 @@
 (ns olyp-central-api.components.web
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            olyp-central-api.web-handler)
   (:import [java.util.concurrent TimeUnit]))
 
 (defn ring-handler [req]
@@ -11,9 +12,11 @@
   component/Lifecycle
 
   (start [component]
-    (log/info (str "Starting web server on port " port))
-    (assoc component
-      :server (org.httpkit.server/run-server ring-handler {:port port})))
+    (let [handler (olyp-central-api.web-handler/create-handler (-> component :database))
+          server (org.httpkit.server/run-server handler {:port port})]
+      (log/info (str "Started web server on port " port))
+      (assoc component
+        :server server)))
   (stop [component]
     (@(:server component) :timeout (.convert TimeUnit/MILLISECONDS 1 TimeUnit/SECONDS))
     (dissoc component :server)))

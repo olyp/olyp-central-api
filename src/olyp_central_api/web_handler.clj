@@ -1,0 +1,16 @@
+(ns olyp-central-api.web-handler
+  (:require bidi.ring
+            [olyp-central-api.web-handlers.users-handler :as users-handler]
+            [datomic.api :as d]))
+
+(defn create-handler [database-comp]
+  (let [datomic-conn (:datomic-conn database-comp)
+        handler (bidi.ring/make-handler
+                 [""
+                  {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
+                   "/users" users-handler/users-collection-handler}])]
+    (fn [req]
+      (let [db (d/db datomic-conn)]
+        (handler (assoc req
+                   :datomic-conn datomic-conn
+                   :datomic-db db))))))

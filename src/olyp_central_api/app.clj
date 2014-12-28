@@ -12,4 +12,6 @@
 (defn create-system [{:keys [database web]}]
   (component/system-map
    :database (create-database database)
-   :web (web/create-web web)))
+   :web (component/using
+         (web/create-web web)
+         [:database])))
