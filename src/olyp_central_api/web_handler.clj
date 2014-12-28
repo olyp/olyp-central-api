@@ -8,7 +8,8 @@
         handler (bidi.ring/make-handler
                  [""
                   {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
-                   "/users" users-handler/users-collection-handler}])]
+                   "/users" users-handler/users-collection-handler
+                   "/users/" {[:user-id ""] users-handler/user-handler}}])]
     (fn [req]
       (let [db (d/db datomic-conn)]
         (handler (assoc req
