@@ -49,7 +49,7 @@
    :allowed-methods [:put :get :delete]
    :processable? (liberator-util/comp-pos-decision
                   liberator-util/processable-json?
-                  (liberator-util/make-json-validator user-factory/validate-user-on-create))
+                  (liberator-util/make-json-validator user-factory/validate-user-on-update))
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
