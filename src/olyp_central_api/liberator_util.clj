@@ -58,9 +58,13 @@
 (defn processable-json? [{{:keys [body request-method]} :request}]
   (if (contains? potentially-unprocessable-methods request-method)
     (try
-      {:olyp-json (-> body slurp cheshire.core/parse-string)}
+      (if (nil? body)
+        [false {:olyp-unprocessable-entity-msg "A HTTP body must be provided"}]
+        {:olyp-json (-> body slurp cheshire.core/parse-string)})
       (catch JsonParseException e
-        [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}]))
+        [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}])
+      (catch Exception e
+        [false {:olyp-unprocessable-entity-msg (.toString e)}]))
     true))
 
 (defn handle-unprocessable-entity [ctx]
