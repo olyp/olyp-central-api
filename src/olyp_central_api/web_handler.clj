@@ -10,7 +10,8 @@
                   {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
                    "/users" users-handler/users-collection-handler
                    "/users/" {[:user-id ""] users-handler/user-handler}
-                   "/authenticate" users-handler/authenticate-user}])]
+                   "/authenticate" users-handler/authenticate-user
+                   "/users_by_email/" {[[#"[^\/]+" :user-email] ""] {"/auth_tokens/" {[:auth-token ""] users-handler/user-by-email-and-auth-token}}}}])]
     (fn [req]
       (let [db (d/db datomic-conn)]
         (handler (assoc req

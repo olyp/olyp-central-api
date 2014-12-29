@@ -6,7 +6,8 @@
             [olyp-central-api.datomic-util :as datomic-util]
             [cheshire.core]
             [liberator.core :refer [resource]])
-  (:import [java.util UUID]))
+  (:import [java.util UUID]
+           [java.net URLDecoder]))
 
 (defn user-ent-to-public-value [ent]
   {:id (str (:user/public-id ent))
@@ -97,6 +98,23 @@
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
    :handle-created
+   (fn [ctx]
+     (-> (:authenticated-user ctx)
+         user-ent-to-public-value
+         cheshire.core/generate-string))))
+
+(def user-by-email-and-auth-token
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:get]
+
+   :exists?
+   (fn [ctx]
+     (if-let [user (d/entity (get-in ctx [:request :datomic-db]) [:user/email (URLDecoder/decode (get-in ctx [:request :route-params :user-email]))])]
+       (if (= (:user/auth-token user) (get-in ctx [:request :route-params :auth-token]))
+         {:authenticated-user user})))
+
+   :handle-ok
    (fn [ctx]
      (-> (:authenticated-user ctx)
          user-ent-to-public-value
