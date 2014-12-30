@@ -6,8 +6,7 @@
             [olyp-central-api.datomic-util :as datomic-util]
             [cheshire.core]
             [liberator.core :refer [resource]])
-  (:import [java.util UUID]
-           [java.net URLDecoder]))
+  (:import [java.net URLDecoder]))
 
 (defn user-ent-to-public-value [ent]
   {:id (str (:user/public-id ent))
@@ -47,12 +46,6 @@
            (user-ent-to-public-value (d/entity db u)))
          (d/q '[:find ?u :where [?u :user/public-id]] db)))))))
 
-(defn get-user-entity-from-route-params [ctx]
-  (let [user-id (UUID/fromString (get-in ctx [:request :route-params :user-id]))
-        db (liberator-util/get-datomic-db ctx)]
-    (if-let [u-eid (ffirst (d/q '[:find ?u :in $ ?uid :where [?u :user/public-id ?uid]] db user-id))]
-      {:datomic-entity (d/entity db u-eid)})))
-
 
 (def user-handler
   (resource
@@ -63,8 +56,8 @@
                   (liberator-util/make-json-validator user-factory/validate-user-on-update))
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
-   :exists? get-user-entity-from-route-params
-   :existed? get-user-entity-from-route-params
+   :exists? (liberator-util/get-user-entity-from-route-params :datomic-entity)
+   :existed? (liberator-util/get-user-entity-from-route-params :datomic-entity)
 
    :put!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]

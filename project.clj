@@ -12,6 +12,7 @@
                  [cheshire "5.3.1"]
                  [com.novemberain/validateur "2.4.2"]
                  [crypto-random "1.2.0"]
+                 [joda-time/joda-time "2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.2"]]
   :main olyp-central-api.main

@@ -3,7 +3,8 @@
             [olyp-central-api.factories.bookings-factory :as bookings-factory]
             [olyp-central-api.liberator-util :as liberator-util]
             [cheshire.core]
-            [liberator.core :refer [resource]]))
+            [liberator.core :refer [resource]])
+  (:import [java.util UUID]))
 
 (defn bookable-room-to-public-value [ent]
   {:id (str (:bookable-room/public-id ent))
@@ -23,13 +24,15 @@
    :allowed-methods [:post]
    :processable? (liberator-util/comp-pos-decision
                   liberator-util/processable-json?
+                  (fn [ctx] {:olyp-json (bookings-factory/enhance-json (:olyp-json ctx))})
                   (liberator-util/make-json-validator bookings-factory/validate-booking))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+   :exists? (liberator-util/get-user-entity-from-route-params :olyp-user)
 
    :post!
-   (fn [{{:keys [datomic-conn]} :request :keys [olyp-json]}]
+   (fn [{{:keys [datomic-conn]} :request :keys [olyp-json olyp-user]}]
      (-> olyp-json
-         (bookings-factory/create-booking datomic-conn)
+         (bookings-factory/create-booking olyp-user datomic-conn)
          liberator-util/ctx-for-entity))
 
    :handle-created
