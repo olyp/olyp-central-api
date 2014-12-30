@@ -94,7 +94,7 @@
                       (if (authentication-query/valid-password? user (olyp-json "password"))
                         {:authenticated-user user}
                         [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:password #{"Incorrect password"}})}])
-                      [false {::olyp-unprocessable-entity-msg (cheshire.core/generate-string {:email #{"No user found with this e-mail"}})}])))
+                      [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:email #{"No user found with this e-mail"}})}])))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
    :handle-created
