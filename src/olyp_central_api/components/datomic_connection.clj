@@ -7,6 +7,10 @@
   (:import [java.util UUID]))
 
 (def schema (-> "datomic_schema.edn" io/resource slurp read-string))
+(defn generate-initial-seed-tx []
+  [{:db/id (d/tempid :db.part/user)
+    :bookable-room/public-id (d/squuid)
+    :bookable-room/name "Rom 5"}])
 
 (defrecord Database [connection-uri]
   component/Lifecycle
@@ -17,6 +21,7 @@
     (let [datomic-conn (d/connect connection-uri)]
       (log/info (str "Ensuring Datomic conforms to schema"))
       (conformity/ensure-conforms datomic-conn schema [:olyp/main-schema])
+      (conformity/ensure-conforms datomic-conn {:olyp/initial-seed-data {:txes [(generate-initial-seed-tx)]}} [:olyp/initial-seed-data])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))
