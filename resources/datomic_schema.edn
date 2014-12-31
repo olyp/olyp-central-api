@@ -162,4 +162,38 @@
                             (let [client-ent (datomic.api/entity (datomic.api/as-of db client-t) eid)]
                               (->> updates
                                    (filter (fn [[attr val]] (not= val (attr client-ent))))
-                                   (map (fn [[attr val]] [:db/add eid attr val])))))}}]]}}
+                                   (map (fn [[attr val]] [:db/add eid attr val])))))}}
+
+    {:db/id #db/id[:db.part/user]
+     :db/ident :set-room-booking-range
+     :db/doc ":db/add for from/to of a booking"
+     :db/fn #db/fn {:lang "clojure"
+                    :params [db eid booking-ref from to]
+                    :code (do
+                            (if (<= 0 (compare from to))
+                              (throw (Exception. "Cannot create a booking that ends before it starts")))
+
+                            (let [bookable-room (datomic.api/entity db booking-ref)
+                                  get-booking-within-range
+                                  (fn [booking-date-attr]
+                                    (ffirst
+                                     (datomic.api/q
+                                      '[:find ?room-booking
+                                        :in $ ?from ?to ?bookable-room-e ?booking-date-attr
+                                        :where
+                                        [?room-booking :room-booking/bookable-room ?bookable-room-e]
+                                        [?room-booking ?booking-date-attr ?booking-date-val]
+                                        [(< ?from ?booking-date-val)]
+                                        [(> ?to ?booking-date-val)]]
+                                      db from to (:db/id bookable-room) booking-date-attr)))]
+
+                              (if-let [conflicting-from (get-booking-within-range :room-booking/from)]
+                                (throw (Exception. (str "This booking conflicts with another booking (" conflicting-from ")"))))
+
+                              (if-let [conflicting-to (get-booking-within-range :room-booking/to)]
+                                (throw (Exception. (str "This booking conflicts with another booking (" conflicting-to ")"))))
+
+                              [[:db/add eid :room-booking/from from]
+                               [:db/add eid :room-booking/to to]
+                               [:db/add eid :room-booking/bookable-room (:db/id bookable-room)]]))}}]]}
+ }
