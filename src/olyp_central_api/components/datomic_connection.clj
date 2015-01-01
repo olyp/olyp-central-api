@@ -3,14 +3,26 @@
             [io.rkn.conformity :as conformity]
             [clojure.java.io :as io]
             [datomic.api :as d]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [olyp-central-api.factories.user-factory :as user-factory])
   (:import [java.util UUID]))
 
 (def schema (-> "datomic_schema.edn" io/resource slurp read-string))
 (defn generate-initial-seed-tx []
   [{:db/id (d/tempid :db.part/user)
     :bookable-room/public-id (d/squuid)
-    :bookable-room/name "Rom 5"}])
+    :bookable-room/name "Rom 5"}
+
+   ;; TODO: Only create this user in dev mode
+   {:db/id (d/tempid :db.part/user)
+    :user/public-id (UUID/fromString "54a495b3-3a20-4d37-88bf-9a433d66db35")
+    :user/email "quentin@test.com"
+    :user/name "Quentin Test"
+    :user/zip "1410"
+    :user/city "Kolbotn"
+    :user/bcrypt-password (user-factory/encrypt-password "test")
+    :user/auth-token "78888a117972edc201892c53498321fa5bfeb31aec5e3bd722f127b1cb0c6757"}
+])
 
 (defrecord Database [connection-uri]
   component/Lifecycle
