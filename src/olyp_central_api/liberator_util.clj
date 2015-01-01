@@ -65,7 +65,7 @@
       (catch JsonParseException e
         [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}])
       (catch Exception e
-        [false {:olyp-unprocessable-entity-msg (.toString e)}]))
+        [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {"msg" (.toString e)})}]))
     true))
 
 (defn handle-unprocessable-entity [ctx]
