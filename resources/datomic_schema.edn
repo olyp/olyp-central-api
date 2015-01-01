@@ -173,24 +173,27 @@
                             (if (<= 0 (compare from to))
                               (throw (Exception. "Cannot create a booking that ends before it starts")))
 
-                            (let [bookable-room (datomic.api/entity db booking-ref)
-                                  get-booking-within-range
-                                  (fn [booking-date-attr]
-                                    (ffirst
-                                     (datomic.api/q
-                                      '[:find ?room-booking
-                                        :in $ ?from ?to ?bookable-room-e ?booking-date-attr
-                                        :where
-                                        [?room-booking :room-booking/bookable-room ?bookable-room-e]
-                                        [?room-booking ?booking-date-attr ?booking-date-val]
-                                        [(< ?from ?booking-date-val)]
-                                        [(> ?to ?booking-date-val)]]
-                                      db from to (:db/id bookable-room) booking-date-attr)))]
-
-                              (if-let [conflicting-from (get-booking-within-range :room-booking/from)]
+                            (let [bookable-room (datomic.api/entity db booking-ref)]
+                              (if-let [conflicting-from (datomic.api/q
+                                                         '[:find ?room-booking .
+                                                           :in $ ?from ?to ?bookable-room-e
+                                                           :where
+                                                           [?room-booking :room-booking/bookable-room ?bookable-room-e]
+                                                           [?room-booking :room-booking/from ?booking-date-val]
+                                                           [(<= ?from ?booking-date-val)]
+                                                           [(> ?to ?booking-date-val)]]
+                                                         db from to (:db/id bookable-room))]
                                 (throw (Exception. (str "This booking conflicts with another booking (" conflicting-from ")"))))
 
-                              (if-let [conflicting-to (get-booking-within-range :room-booking/to)]
+                              (if-let [conflicting-to (datomic.api/q
+                                                       '[:find ?room-booking .
+                                                         :in $ ?from ?to ?bookable-room-e
+                                                         :where
+                                                         [?room-booking :room-booking/bookable-room ?bookable-room-e]
+                                                         [?room-booking :room-booking/to ?booking-date-val]
+                                                         [(< ?from ?booking-date-val)]
+                                                         [(>= ?to ?booking-date-val)]]
+                                                       db from to (:db/id bookable-room))]
                                 (throw (Exception. (str "This booking conflicts with another booking (" conflicting-to ")"))))
 
                               [[:db/add eid :room-booking/from from]
