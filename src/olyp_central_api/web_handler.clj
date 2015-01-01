@@ -11,10 +11,13 @@
                   {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
                    "/users" users-handler/users-collection-handler
                    "/users/" {[:user-id ""] {"" users-handler/user-handler
-                                             "/bookings" bookings-handler/bookings-collection-resource}}
+                                             "/bookings" bookings-handler/bookings-for-user-collection-handler}}
                    "/authenticate" users-handler/authenticate-user
                    "/users_by_email/" {[[#"[^\/]+" :user-email] ""] {"/auth_tokens/" {[:auth-token ""] users-handler/user-by-email-and-auth-token}}}
-                   "/bookable_rooms" bookings-handler/bookable-rooms-collection-handler}])]
+                   "/bookable_rooms" {"" bookings-handler/bookable-rooms-collection-handler
+                                      "/" {[[#"[^\/]+" :bookable-room-id] ""]
+                                           {"/bookings/" {[[#"[^\/]+" :date] ""]
+                                                         bookings-handler/bookings-for-bookable-room-collection-handler}}}}}])]
     (fn [req]
       (let [db (d/db datomic-conn)]
         (handler (assoc req
