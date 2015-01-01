@@ -15,9 +15,10 @@
 (defn booking-ent-to-public-value [ent]
   {:from (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-booking/from ent)))
    :to (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-booking/to ent)))
-   :user {:id (str (:user/public-id ent))
-          :email (:user/email ent)
-          :name (:user/name ent)}
+   :user (if-let [user-ent (:room-booking/user ent)]
+           {:id (str (:user/public-id user-ent))
+            :email (:user/email user-ent)
+            :name (:user/name user-ent)})
    :bookable-room (bookable-room-to-public-value (:room-booking/bookable-room ent))})
 
 (def bookings-for-user-collection-handler
