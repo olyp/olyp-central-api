@@ -60,6 +60,23 @@
 (def bookable-room-date-format (-> (DateTimeFormat/forPattern "dd.MM.yyyy")
                                    (.withZone (DateTimeZone/forID "Europe/Oslo"))))
 
+(defn get-bookings [db from to bookable-room]
+  (if (not= -1 (compare from to))
+    (throw (Exception. "Cannot get bookings, from date is not earlier than to date.")))
+
+  (d/q
+   '[:find [?room-booking ...]
+     :in $ ?from ?to ?bookable-room-e
+     :where
+     [?room-booking :room-booking/bookable-room ?bookable-room-e]
+     [?room-booking :room-booking/from ?room-booking-from]
+     [?room-booking :room-booking/to ?room-booking-to]
+     ;; http://c2.com/cgi/wiki?TestIfDateRangesOverlap
+     [(<= ?room-booking-from ?room-booking-to)]
+     [(<= ?room-booking-from ?to)]
+     [(<= ?from ?room-booking-to)]]
+   db from to (:db/id bookable-room)))
+
 (def bookings-for-bookable-room-collection-handler
   (resource
    :available-media-types ["application/json"]
@@ -81,27 +98,7 @@
 
    :handle-ok
    (fn [{:keys [olyp-booking-date olyp-bookable-room] :as ctx}]
-     (let [db (liberator-util/get-datomic-db ctx)
-           bookings (set
-                     (concat
-                      (d/q
-                       '[:find [?room-booking ...]
-                         :in $ ?from ?bookable-room-e
-                         :where
-                         [?room-booking :room-booking/bookable-room ?bookable-room-e]
-                         [?room-booking :room-booking/from ?room-booking-from]
-                         [(< ?from ?room-booking-from)]]
-                       db
-                       (.toDate olyp-booking-date)
-                       (:db/id olyp-bookable-room))
-                      (d/q
-                       '[:find [?room-booking ...]
-                         :in $ ?to ?bookable-room-e
-                         :where
-                         [?room-booking :room-booking/bookable-room ?bookable-room-e]
-                         [?room-booking :room-booking/to ?room-booking-to]
-                         [(> ?to ?room-booking-to)]]
-                       db
-                       (.toDate (.plusDays olyp-booking-date 7))
-                       (:db/id olyp-bookable-room))))]
-       (map #(booking-ent-to-public-value (d/entity db %)) bookings)))))
+     (let [db (liberator-util/get-datomic-db ctx)]
+       (map
+        #(booking-ent-to-public-value (d/entity db %))
+        (get-bookings db (.toDate olyp-booking-date) (.toDate (-> olyp-booking-date (.plusDays 7) (.minusSeconds 1))) olyp-bookable-room))))))
