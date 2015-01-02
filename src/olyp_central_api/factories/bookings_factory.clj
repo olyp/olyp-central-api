@@ -42,3 +42,6 @@
                   [:set-room-booking-range tempid [:bookable-room/public-id (data "bookable_room_id")] (data "from") (data "to")]
                   [:db/add tempid :room-booking/user (:db/id user)]])]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) tempid))))
+
+(defn delete-booking [ent datomic-conn]
+  @(d/transact datomic-conn [[:db.fn/retractEntity (:db/id ent)]]))

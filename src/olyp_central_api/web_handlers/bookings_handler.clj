@@ -104,3 +104,30 @@
        (map
         #(booking-ent-to-public-value (d/entity db %))
         (get-bookings db (.toDate olyp-booking-date) (.toDate (-> olyp-booking-date (.plusDays 7) (.minusSeconds 1))) olyp-bookable-room))))))
+
+(def booking-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:get :delete]
+   :processable? liberator-util/processable-json?
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :exists?
+   (liberator-util/comp-pos-decision
+    (liberator-util/get-user-entity-from-route-params :olyp-user)
+    (fn [ctx]
+      (if-let [booking (d/entity
+                        (liberator-util/get-datomic-db ctx)
+                        [:room-booking/public-id (UUID/fromString (get-in ctx [:request :route-params :booking-id]))])]
+        {:olyp-booking booking})))
+
+   :delete!
+   (fn [{{:keys [datomic-conn]} :request :keys [olyp-booking]}]
+     (-> (bookings-factory/delete-booking olyp-booking datomic-conn)
+         liberator-util/ctx-for-tx-res))
+
+   :handle-ok
+   (fn [ctx]
+     (-> (:olyp-booking ctx)
+         booking-ent-to-public-value
+         cheshire.core/generate-string))))
