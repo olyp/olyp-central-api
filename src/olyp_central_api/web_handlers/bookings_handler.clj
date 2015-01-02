@@ -13,7 +13,8 @@
    :name (:bookable-room/name ent)})
 
 (defn booking-ent-to-public-value [ent]
-  {:from (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-booking/from ent)))
+  {:id (str (:room-booking/public-id ent))
+   :from (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-booking/from ent)))
    :to (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-booking/to ent)))
    :user (if-let [user-ent (:room-booking/user ent)]
            {:id (str (:user/public-id user-ent))

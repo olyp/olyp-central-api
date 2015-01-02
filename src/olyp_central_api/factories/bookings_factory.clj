@@ -38,6 +38,7 @@
   (let [tempid (d/tempid :db.part/user)
         tx-res @(d/transact
                  datomic-conn
-                 [[:set-room-booking-range tempid [:bookable-room/public-id (data "bookable_room_id")] (data "from") (data "to")]
+                 [[:db/add tempid :room-booking/public-id (d/squuid)]
+                  [:set-room-booking-range tempid [:bookable-room/public-id (data "bookable_room_id")] (data "from") (data "to")]
                   [:db/add tempid :room-booking/user (:db/id user)]])]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) tempid))))
