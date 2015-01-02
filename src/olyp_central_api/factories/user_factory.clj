@@ -34,6 +34,11 @@
     user-base-validators
     user-update-validators)))
 
+(def validate-password-change
+  (v/validation-set
+   (v/presence-of "password")
+   (v/all-keys-in #{"password"})))
+
 (defn encrypt-password [password]
   (crypto.password.bcrypt/encrypt password 11))
 
@@ -63,3 +68,10 @@
 
 (defn delete-user [ent datomic-conn]
   @(d/transact datomic-conn [[:db.fn/retractEntity (:db/id ent)]]))
+
+(defn change-password [password ent datomic-conn]
+  (let [user-id (:db/id ent)
+        tx-res @(d/transact
+                 datomic-conn
+                 [[:db/add user-id :user/bcrypt-password (encrypt-password password)]])]
+    (d/entity (:db-after tx-res) user-id)))

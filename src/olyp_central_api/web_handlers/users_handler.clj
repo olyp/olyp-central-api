@@ -112,3 +112,26 @@
      (-> (:authenticated-user ctx)
          user-ent-to-public-value
          cheshire.core/generate-string))))
+
+(def password-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:put]
+   :processable? (liberator-util/comp-pos-decision
+                  liberator-util/processable-json?
+                  (liberator-util/make-json-validator user-factory/validate-password-change))
+   :can-put-to-missing? false
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+   :exists? (liberator-util/get-user-entity-from-route-params :datomic-entity)
+   :existed? (liberator-util/get-user-entity-from-route-params :datomic-entity)
+
+   :put!
+   (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]
+     (-> (user-factory/change-password (olyp-json "password") datomic-entity datomic-conn)
+         liberator-util/ctx-for-entity))
+
+   :handle-ok
+   (fn [ctx]
+     (-> (:datomic-entity ctx)
+         user-ent-to-public-value
+         cheshire.core/generate-string))))

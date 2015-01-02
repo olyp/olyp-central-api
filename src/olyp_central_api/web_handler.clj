@@ -11,7 +11,8 @@
                   {"/" (fn [req] {:status 200 :body "OLYP Central API!"})
                    "/users" users-handler/users-collection-handler
                    "/users/" {[:user-id ""] {"" users-handler/user-handler
-                                             "/bookings" bookings-handler/bookings-for-user-collection-handler}}
+                                             "/bookings" bookings-handler/bookings-for-user-collection-handler
+                                             "/password" users-handler/password-handler}}
                    "/authenticate" users-handler/authenticate-user
                    "/users_by_email/" {[[#"[^\/]+" :user-email] ""] {"/auth_tokens/" {[:auth-token ""] users-handler/user-by-email-and-auth-token}}}
                    "/bookable_rooms" {"" bookings-handler/bookable-rooms-collection-handler
