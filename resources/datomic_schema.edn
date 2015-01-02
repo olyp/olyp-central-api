@@ -158,7 +158,7 @@
                               (let [t (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
                                           ffirst
                                           datomic.api/tx->t)]
-                                (if (not= t client-t)
+                                (if (> t client-t)
                                   (throw (Exception. (str "Attribute " attr " optimistically locked! Client version is " client-t ", database version is " t "."))))))
 
                             (let [client-ent (datomic.api/entity (datomic.api/as-of db client-t) eid)]
