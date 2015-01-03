@@ -26,12 +26,14 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:post]
-   :processable? (liberator-util/comp-pos-decision
-                  liberator-util/processable-json?
-                  (fn [ctx] {:olyp-json (bookings-factory/enhance-json (:olyp-json ctx))})
-                  (liberator-util/make-json-validator bookings-factory/validate-booking))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
    :exists? (liberator-util/get-user-entity-from-route-params :olyp-user)
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (fn [ctx] {:olyp-json (bookings-factory/enhance-json (:olyp-json ctx))})
+    (liberator-util/make-json-validator bookings-factory/validate-booking))
 
    :post!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json olyp-user]}]
@@ -83,13 +85,15 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:get]
-   :processable? (fn [ctx]
-                   (let [date-str (get-in ctx [:request :route-params :date])]
-                     (try
-                       {:olyp-booking-date (.parseDateTime bookable-room-date-format date-str)}
-                       (catch IllegalArgumentException e
-                         [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {"msg" (str "Invalid date format. Got " date-str ", error was " (.getMessage e))})}]))))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :processable?
+   (fn [ctx]
+     (let [date-str (get-in ctx [:request :route-params :date])]
+       (try
+         {:olyp-booking-date (.parseDateTime bookable-room-date-format date-str)}
+         (catch IllegalArgumentException e
+           [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {"msg" (str "Invalid date format. Got " date-str ", error was " (.getMessage e))})}]))))
 
    :exists?
    (fn [ctx]

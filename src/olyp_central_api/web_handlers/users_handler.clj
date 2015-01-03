@@ -21,10 +21,12 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:post :get]
-   :processable? (liberator-util/comp-pos-decision
-                  liberator-util/processable-json?
-                  (liberator-util/make-json-validator user-factory/validate-user-on-create))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator user-factory/validate-user-on-create))
 
    :post!
    (fn [{{:keys [datomic-conn]} :request :as ctx}]
@@ -51,13 +53,15 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:put :get :delete]
-   :processable? (liberator-util/comp-pos-decision
-                  liberator-util/processable-json?
-                  (liberator-util/make-json-validator user-factory/validate-user-on-update))
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
    :exists? (liberator-util/get-user-entity-from-route-params :datomic-entity)
    :existed? (liberator-util/get-user-entity-from-route-params :datomic-entity)
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator user-factory/validate-user-on-update))
 
    :put!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]
@@ -79,16 +83,18 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:post]
-   :processable? (liberator-util/comp-pos-decision
-                  liberator-util/processable-json?
-                  (liberator-util/make-json-validator authentication-query/validate-authentication)
-                  (fn [{{:keys [datomic-db]} :request :keys [olyp-json]}]
-                    (if-let [user (d/entity datomic-db [:user/email (olyp-json "email")])]
-                      (if (authentication-query/valid-password? user (olyp-json "password"))
-                        {:authenticated-user user}
-                        [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:password #{"Incorrect password"}})}])
-                      [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:email #{"No user found with this e-mail"}})}])))
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator authentication-query/validate-authentication)
+    (fn [{{:keys [datomic-db]} :request :keys [olyp-json]}]
+      (if-let [user (d/entity datomic-db [:user/email (olyp-json "email")])]
+        (if (authentication-query/valid-password? user (olyp-json "password"))
+          {:authenticated-user user}
+          [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:password #{"Incorrect password"}})}])
+        [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {:email #{"No user found with this e-mail"}})}])))
 
    :handle-created
    (fn [ctx]
@@ -117,13 +123,15 @@
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:put]
-   :processable? (liberator-util/comp-pos-decision
-                  liberator-util/processable-json?
-                  (liberator-util/make-json-validator user-factory/validate-password-change))
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
    :exists? (liberator-util/get-user-entity-from-route-params :datomic-entity)
    :existed? (liberator-util/get-user-entity-from-route-params :datomic-entity)
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator user-factory/validate-password-change))
 
    :put!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json datomic-entity]}]
