@@ -152,7 +152,10 @@
                                                            [(<= ?from ?reservation-date-val)]
                                                            [(> ?to ?reservation-date-val)]]
                                                          db from to (:db/id reservable-room))]
-                                (throw (Exception. (str "This reservation conflicts with another reservation (" conflicting-from ")"))))
+                                (throw (ex-info (str "This reservation conflicts with another reservation (" conflicting-from ")")
+                                                {:type :set-room-reservation-range
+                                                 :conflicting-reservation-eid conflicting-from
+                                                 :conflicting-reservation-from (:room-reservation/from (datomic.api/entity db conflicting-from))})))
 
                               (if-let [conflicting-to (datomic.api/q
                                                        '[:find ?room-reservation .
@@ -163,7 +166,10 @@
                                                          [(< ?from ?reservation-date-val)]
                                                          [(>= ?to ?reservation-date-val)]]
                                                        db from to (:db/id reservable-room))]
-                                (throw (Exception. (str "This reservation conflicts with another reservation (" conflicting-to ")"))))
+                                (throw (ex-info (str "This reservation conflicts with another reservation (" conflicting-to ")")
+                                                {:type :set-room-reservation-range
+                                                 :conflicting-reservation-eid conflicting-to
+                                                 :conflicting-reservation-from (:room-reservation/from (datomic.api/entity db conflicting-to))})))
 
                               [[:db/add eid :room-reservation/from from]
                                [:db/add eid :room-reservation/to to]

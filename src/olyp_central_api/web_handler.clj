@@ -21,7 +21,14 @@
                                            {"/reservations/" {[[#"[^\/]+" :date] ""]
                                                          reservations-handler/reservations-for-reservable-room-collection-handler}}}}}])]
     (fn [req]
-      (let [db (d/db datomic-conn)]
-        (handler (assoc req
-                   :datomic-conn datomic-conn
-                   :datomic-db db))))))
+      (try
+        (let [db (d/db datomic-conn)]
+          (handler (assoc req
+                     :datomic-conn datomic-conn
+                     :datomic-db db)))
+        (catch clojure.lang.ExceptionInfo e
+          (if (-> e ex-data :olyp-validation-error)
+            {:status 422
+             :headers {"Content-Type" "application/json"}
+             :body (cheshire.core/generate-string {:_msg #{(.getMessage e)}})}
+            (throw e)))))))
