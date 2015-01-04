@@ -48,17 +48,54 @@
 
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :bookable-room/public-id
+     :db/ident :reservable-room/public-id
      :db/valueType :db.type/uuid
      :db/cardinality :db.cardinality/one
      :db/unique :db.unique/value
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :bookable-room/name
+     :db/ident :reservable-room/name
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/public-id
+     :db/valueType :db.type/uuid
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/reservable-room
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/from
+     :db/valueType :db.type/instant
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/to
+     :db/valueType :db.type/instant
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/ref
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
 
 
 
@@ -70,30 +107,12 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :room-booking/from
-     :db/valueType :db.type/instant
-     :db/index true
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :room-booking/to
-     :db/valueType :db.type/instant
-     :db/index true
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
      :db/ident :room-booking/user
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
-    {:db/id #db/id[:db.part/db]
-     :db/ident :room-booking/bookable-room
-     :db/valueType :db.type/ref
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
+
 
 
     {:db/id #db/id[:db.part/user]
@@ -115,38 +134,38 @@
                                    (map (fn [[attr val]] [:db/add eid attr val])))))}}
 
     {:db/id #db/id[:db.part/user]
-     :db/ident :set-room-booking-range
-     :db/doc ":db/add for from/to of a booking"
+     :db/ident :set-room-reservation-range
+     :db/doc ":db/add for from/to of a reservation"
      :db/fn #db/fn {:lang "clojure"
-                    :params [db eid booking-ref from to]
+                    :params [db eid reservation-ref from to]
                     :code (do
                             (if (<= 0 (compare from to))
-                              (throw (Exception. "Cannot create a booking that ends before it starts")))
+                              (throw (Exception. "Cannot create a reservation that ends before it starts")))
 
-                            (let [bookable-room (datomic.api/entity db booking-ref)]
+                            (let [reservable-room (datomic.api/entity db reservation-ref)]
                               (if-let [conflicting-from (datomic.api/q
-                                                         '[:find ?room-booking .
-                                                           :in $ ?from ?to ?bookable-room-e
+                                                         '[:find ?room-reservation .
+                                                           :in $ ?from ?to ?reservable-room-e
                                                            :where
-                                                           [?room-booking :room-booking/bookable-room ?bookable-room-e]
-                                                           [?room-booking :room-booking/from ?booking-date-val]
-                                                           [(<= ?from ?booking-date-val)]
-                                                           [(> ?to ?booking-date-val)]]
-                                                         db from to (:db/id bookable-room))]
-                                (throw (Exception. (str "This booking conflicts with another booking (" conflicting-from ")"))))
+                                                           [?room-reservation :room-reservation/reservable-room ?reservable-room-e]
+                                                           [?room-reservation :room-reservation/from ?reservation-date-val]
+                                                           [(<= ?from ?reservation-date-val)]
+                                                           [(> ?to ?reservation-date-val)]]
+                                                         db from to (:db/id reservable-room))]
+                                (throw (Exception. (str "This reservation conflicts with another reservation (" conflicting-from ")"))))
 
                               (if-let [conflicting-to (datomic.api/q
-                                                       '[:find ?room-booking .
-                                                         :in $ ?from ?to ?bookable-room-e
+                                                       '[:find ?room-reservation .
+                                                         :in $ ?from ?to ?reservable-room-e
                                                          :where
-                                                         [?room-booking :room-booking/bookable-room ?bookable-room-e]
-                                                         [?room-booking :room-booking/to ?booking-date-val]
-                                                         [(< ?from ?booking-date-val)]
-                                                         [(>= ?to ?booking-date-val)]]
-                                                       db from to (:db/id bookable-room))]
-                                (throw (Exception. (str "This booking conflicts with another booking (" conflicting-to ")"))))
+                                                         [?room-reservation :room-reservation/reservable-room ?reservable-room-e]
+                                                         [?room-reservation :room-reservation/to ?reservation-date-val]
+                                                         [(< ?from ?reservation-date-val)]
+                                                         [(>= ?to ?reservation-date-val)]]
+                                                       db from to (:db/id reservable-room))]
+                                (throw (Exception. (str "This reservation conflicts with another reservation (" conflicting-to ")"))))
 
-                              [[:db/add eid :room-booking/from from]
-                               [:db/add eid :room-booking/to to]
-                               [:db/add eid :room-booking/bookable-room (:db/id bookable-room)]]))}}]]}
+                              [[:db/add eid :room-reservation/from from]
+                               [:db/add eid :room-reservation/to to]
+                               [:db/add eid :room-reservation/reservable-room (:db/id reservable-room)]]))}}]]}
  }

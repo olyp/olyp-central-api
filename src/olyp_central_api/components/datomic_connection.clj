@@ -10,8 +10,8 @@
 (def schema (-> "datomic_schema.edn" io/resource slurp read-string))
 (defn generate-initial-seed-tx []
   [{:db/id (d/tempid :db.part/user)
-    :bookable-room/public-id (d/squuid)
-    :bookable-room/name "Rom 5"}
+    :reservable-room/public-id (d/squuid)
+    :reservable-room/name "Rom 5"}
 
    ;; TODO: Only create this user in dev mode
    {:db/id (d/tempid :db.part/user)
