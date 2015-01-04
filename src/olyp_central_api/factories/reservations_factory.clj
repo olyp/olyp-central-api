@@ -1,4 +1,4 @@
-(ns olyp-central-api.factories.bookings-factory
+(ns olyp-central-api.factories.reservations-factory
   (:require [datomic.api :as d]
             [validateur.validation :as v])
   (:import [java.util UUID Date]

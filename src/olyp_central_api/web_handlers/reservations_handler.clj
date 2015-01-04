@@ -1,6 +1,6 @@
-(ns olyp-central-api.web-handlers.bookings-handler
+(ns olyp-central-api.web-handlers.reservations-handler
   (:require [datomic.api :as d]
-            [olyp-central-api.factories.bookings-factory :as reservations-factory]
+            [olyp-central-api.factories.reservations-factory :as reservations-factory]
             [olyp-central-api.liberator-util :as liberator-util]
             [cheshire.core]
             [liberator.core :refer [resource]])

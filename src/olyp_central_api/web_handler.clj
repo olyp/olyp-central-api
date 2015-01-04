@@ -1,7 +1,7 @@
 (ns olyp-central-api.web-handler
   (:require bidi.ring
             [olyp-central-api.web-handlers.users-handler :as users-handler]
-            [olyp-central-api.web-handlers.bookings-handler :as reservations-handler]
+            [olyp-central-api.web-handlers.reservations-handler :as reservations-handler]
             [datomic.api :as d]))
 
 (defn create-handler [database-comp]
