@@ -8,9 +8,7 @@
   [(v/presence-of "email")
    (v/format-of "email" :format #"^.*?@.*?\..*?$" :message "must be an e-mail address")
    (v/presence-of "name")
-   (v/presence-of "zip")
-   (v/format-of "zip" :format #"^\d\d\d\d$" :message "must be a four digit number")
-   (v/presence-of "city")])
+   (v/presence-of "contract_id")])
 
 (def user-creation-validators
   [(v/presence-of "password")])
@@ -22,7 +20,7 @@
   (apply
    v/validation-set
    (concat
-    [(v/all-keys-in #{"email" "name" "zip" "city" "password"})]
+    [(v/all-keys-in #{"email" "name" "contract_id" "password"})]
     user-base-validators
     user-creation-validators)))
 
@@ -30,7 +28,7 @@
   (apply
    v/validation-set
    (concat
-    [(v/all-keys-in #{"email" "name" "zip" "city" "version"})]
+    [(v/all-keys-in #{"email" "name" "contract_id" "version"})]
     user-base-validators
     user-update-validators)))
 
@@ -46,11 +44,10 @@
   (let [user-tempid (d/tempid :db.part/user)
         tx-res @(d/transact
                  datomic-conn
-                 [[:db/add user-tempid :user/public-id (d/squuid)]
+                 [[:db/add user-tempid :user/contract [:contract/public-id (data "contract_id")]]
+                  [:db/add user-tempid :user/public-id (d/squuid)]
                   [:db/add user-tempid :user/email (data "email")]
                   [:db/add user-tempid :user/name (data "name")]
-                  [:db/add user-tempid :user/zip (data "zip")]
-                  [:db/add user-tempid :user/city (data "city")]
                   [:db/add user-tempid :user/bcrypt-password (encrypt-password (data "password"))]
                   [:db/add user-tempid :user/auth-token (crypto.random/hex 32)]])]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) user-tempid))))
@@ -62,8 +59,7 @@
                  [[:optimistic-add (data "version") user-id
                    {:user/email (data "email")
                     :user/name (data "name")
-                    :user/zip (data "zip")
-                    :user/city (data "city")}]])]
+                    :user/contract [:contract/public-id (data "contract_id")]}]])]
     (d/entity (:db-after tx-res) user-id)))
 
 (defn delete-user [ent datomic-conn]

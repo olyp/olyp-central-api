@@ -12,9 +12,8 @@
   {:id (str (:user/public-id ent))
    :email (:user/email ent)
    :name (:user/name ent)
-   :zip (:user/zip ent)
-   :city (:user/city ent)
    :auth-token (:user/auth-token ent)
+   :contract_id (get-in ent [:user/contract :contract/public-id])
    :version (datomic-util/get-most-recent-t ent)})
 
 (def users-collection-handler

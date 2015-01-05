@@ -2,6 +2,7 @@
   (:require bidi.ring
             [olyp-central-api.web-handlers.users-handler :as users-handler]
             [olyp-central-api.web-handlers.reservations-handler :as reservations-handler]
+            [olyp-central-api.web-handlers.contracts-handler :as contracts-handler]
             [datomic.api :as d]))
 
 (defn create-handler [database-comp]
@@ -19,7 +20,9 @@
                    "/reservable_rooms" {"" reservations-handler/reservable-rooms-collection-handler
                                       "/" {[[#"[^\/]+" :reservable-room-id] ""]
                                            {"/reservations/" {[[#"[^\/]+" :date] ""]
-                                                         reservations-handler/reservations-for-reservable-room-collection-handler}}}}}])]
+                                                         reservations-handler/reservations-for-reservable-room-collection-handler}}}}
+                   "/contracts" contracts-handler/contracts-collection-handler
+                   "/contracts/" {[:contract-id ""] {"" contracts-handler/contract-handler}}}])]
     (fn [req]
       (try
         (let [db (d/db datomic-conn)]

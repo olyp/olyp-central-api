@@ -21,14 +21,8 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :user/zip
-     :db/valueType :db.type/string
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :user/city
-     :db/valueType :db.type/string
+     :db/ident :user/contract
+     :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
@@ -43,6 +37,65 @@
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/public-id
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/value
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/brreg-id
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/name
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/address
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/zip
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/city
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/contact-person-name
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/contact-person-email
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :contract/contact-person-phone
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
 
 
 
