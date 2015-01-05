@@ -8,6 +8,9 @@
 
 (defn contract-ent-to-public-value [ent]
   {:id (str (:contract/public-id ent))
+   :type (case (:contract/type ent)
+           :contract.type/company "company"
+           :contract.type/person "person")
    :brreg_id (:contract/brreg-id ent)
    :name (:contract/name ent)
    :address (:contract/address ent)
@@ -21,24 +24,7 @@
 (def contracts-collection-handler
   (resource
    :available-media-types ["application/json"]
-   :allowed-methods [:post :get]
-   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
-
-   :processable?
-   (liberator-util/comp-pos-decision
-    liberator-util/processable-json?
-    (liberator-util/make-json-validator contracts-factory/validate-contract-on-create))
-
-   :post!
-   (fn [{{:keys [datomic-conn]} :request :as ctx}]
-     (-> (:olyp-json ctx)
-         (contracts-factory/create-contract datomic-conn)
-         liberator-util/ctx-for-entity))
-
-   :handle-created
-   (fn [ctx]
-     (cheshire.core/generate-string
-      (contract-ent-to-public-value (:datomic-entity ctx))))
+   :allowed-methods [:get]
 
    :handle-ok
    (fn [ctx]
@@ -49,29 +35,106 @@
            (contract-ent-to-public-value (d/entity db u)))
          (d/q '[:find ?u :where [?u :contract/public-id]] db)))))))
 
-(defn contract-exists? [ctx]
-  (if-let [contract (d/entity
-                     (liberator-util/get-datomic-db ctx)
-                     [:contract/public-id (get-in ctx [:request :route-params :contract-id])])]
-    {:olyp-contract contract}))
+(def company-contracts-collection-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:post]
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
 
-(def contract-handler
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator contracts-factory/validate-company-contract-on-create))
+
+   :post!
+   (fn [{{:keys [datomic-conn]} :request :as ctx}]
+     (-> (:olyp-json ctx)
+         (contracts-factory/create-company-contract datomic-conn)
+         liberator-util/ctx-for-entity))
+
+   :handle-created
+   (fn [ctx]
+     (cheshire.core/generate-string
+      (contract-ent-to-public-value (:datomic-entity ctx))))))
+
+(def person-contracts-collection-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:post]
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator contracts-factory/validate-person-contract-on-create))
+
+   :post!
+   (fn [{{:keys [datomic-conn]} :request :as ctx}]
+     (-> (:olyp-json ctx)
+         (contracts-factory/create-person-contract datomic-conn)
+         liberator-util/ctx-for-entity))
+
+   :handle-created
+   (fn [ctx]
+     (cheshire.core/generate-string
+      (contract-ent-to-public-value (:datomic-entity ctx))))))
+
+(defn contract-exists? [type]
+  (fn [ctx]
+    (let [db (liberator-util/get-datomic-db ctx)]
+      (if-let [contract-eid (d/q
+                             '[:find ?contract .
+                               :in $ ?pubid ?type
+                               :where
+                               [?contract :contract/public-id ?pubid]
+                               [?contract :contract/type ?type]]
+                             db
+                             (get-in ctx [:request :route-params :contract-id])
+                             type)]
+        {:olyp-contract (d/entity db contract-eid)}))))
+
+(def company-contract-handler
   (resource
    :available-media-types ["application/json"]
    :allowed-methods [:put :get]
    :can-put-to-missing? false
    :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
-   :exists? contract-exists?
-   :existed? contract-exists?
+   :exists? (contract-exists? :contract.type/company)
+   :existed? (contract-exists? :contract.type/company)
 
    :processable?
    (liberator-util/comp-pos-decision
     liberator-util/processable-json?
-    (liberator-util/make-json-validator contracts-factory/validate-contract-on-update))
+    (liberator-util/make-json-validator contracts-factory/validate-company-contract-on-update))
 
    :put!
    (fn [{{:keys [datomic-conn]} :request :keys [olyp-json olyp-contract]}]
-     (-> (contracts-factory/update-contract olyp-json olyp-contract datomic-conn)
+     (-> (contracts-factory/update-company-contract olyp-json olyp-contract datomic-conn)
+         liberator-util/ctx-for-entity))
+
+   :handle-ok
+   (fn [ctx]
+     (-> (:olyp-contract ctx)
+         contract-ent-to-public-value
+         cheshire.core/generate-string))))
+
+(def person-contract-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:put :get]
+   :can-put-to-missing? false
+   :handle-unprocessable-entity liberator-util/handle-unprocessable-entity
+   :exists? (contract-exists? :contract.type/person)
+   :existed? (contract-exists? :contract.type/person)
+
+   :processable?
+   (liberator-util/comp-pos-decision
+    liberator-util/processable-json?
+    (liberator-util/make-json-validator contracts-factory/validate-person-contract-on-update))
+
+   :put!
+   (fn [{{:keys [datomic-conn]} :request :keys [olyp-json olyp-contract]}]
+     (-> (contracts-factory/update-person-contract olyp-json olyp-contract datomic-conn)
          liberator-util/ctx-for-entity))
 
    :handle-ok

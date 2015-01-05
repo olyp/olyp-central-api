@@ -49,6 +49,15 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
+     :db/ident :contract/type
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/user] :db/ident :contract.type/company}
+    {:db/id #db/id[:db.part/user] :db/ident :contract.type/person}
+
+    {:db/id #db/id[:db.part/db]
      :db/ident :contract/brreg-id
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one

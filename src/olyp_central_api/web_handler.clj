@@ -22,7 +22,10 @@
                                            {"/reservations/" {[[#"[^\/]+" :date] ""]
                                                          reservations-handler/reservations-for-reservable-room-collection-handler}}}}
                    "/contracts" contracts-handler/contracts-collection-handler
-                   "/contracts/" {[:contract-id ""] {"" contracts-handler/contract-handler}}}])]
+                   "/company_contracts" contracts-handler/company-contracts-collection-handler
+                   "/person_contracts" contracts-handler/person-contracts-collection-handler
+                   "/company_contracts/" {[:contract-id ""] {"" contracts-handler/company-contract-handler}}
+                   "/person_contracts/" {[:contract-id ""] {"" contracts-handler/person-contract-handler}}}])]
     (fn [req]
       (try
         (let [db (d/db datomic-conn)]

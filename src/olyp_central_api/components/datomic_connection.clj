@@ -16,6 +16,7 @@
    ;; TODO: Only create this data in dev mode
    {:db/id (d/tempid :db.part/user -1)
     :contract/public-id (str (d/squuid))
+    :contract/type :contract.type/company
     :contract/brreg-id "123456789"
     :contract/name "Quentin Inc."
     :contract/zip "1410"
