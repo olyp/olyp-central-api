@@ -117,10 +117,10 @@
 
     {:db/id #db/id[:db.part/user]
      :db/ident :optimistic-add
-     :db/doc ":db/add with optimistic locking based on client-t"
+     :db/doc ":db/add with optimistic locking based on client-t. Filters out null values in the updates map."
      :db/fn #db/fn {:lang "clojure"
-                    :params [db client-t eid updates]
-                    :code (do
+                    :params [db client-t eid updates-with-nil]
+                    :code (let [updates (filter (fn [[key value]] (not (nil? value))) updates-with-nil)]
                             (doseq [[attr val] updates]
                               (let [t (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
                                           ffirst
@@ -134,7 +134,11 @@
 
                             (let [client-ent (datomic.api/entity (datomic.api/as-of db client-t) eid)]
                               (->> updates
-                                   (filter (fn [[attr val]] (not= val (attr client-ent))))
+                                   (filter (fn [[attr val]]
+                                             (let [value-type (:db/valueType (datomic.api/entity db attr))]
+                                               (if (= value-type :db.type/ref)
+                                                 (not= (:db/id (datomic.api/entity db val) (:db/id (attr client-ent))))
+                                                 (not= val (attr client-ent))))))
                                    (map (fn [[attr val]] [:db/add eid attr val])))))}}
 
     {:db/id #db/id[:db.part/user]
