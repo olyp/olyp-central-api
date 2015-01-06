@@ -1,4 +1,4 @@
-(ns olyp-central-api.main
+(ns olyp-central-api.main-prod
   (:gen-class)
   (:require olyp-central-api.app
             [com.stuartsierra.component :as component]
@@ -11,7 +11,7 @@
 
 (defn generate-initial-seed-tx []
   [{:db/id (d/tempid :db.part/user)
-    :reservable-room/public-id (d/squuid)
+    :reservable-room/public-id (str (d/squuid))
     :reservable-room/name "Rom 5"}])
 
 (defn -main [& args]

@@ -15,8 +15,9 @@
                  [joda-time/joda-time "2.6"]
                  [org.clojure/tools.logging "0.3.1"]
                  [ch.qos.logback/logback-classic "1.1.2"]]
-  :main olyp-central-api.main
-  :profiles {:dev {:source-paths ["dev"]}
-             :uberjar {:source-paths ["prod"]}}
-  :plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]]
-  :aot [olyp-central-api.main])
+  :profiles {:dev {:source-paths ["dev"]
+                   :main olyp-central-api.main-dev}
+             :uberjar {:source-paths ["prod"]
+                       :main olyp-central-api.main-prod
+                       :aot [olyp-central-api.main-prod]}}
+  :plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]])

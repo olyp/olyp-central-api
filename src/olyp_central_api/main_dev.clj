@@ -1,16 +1,15 @@
-(ns olyp-central-api.main
+(ns olyp-central-api.main-dev
   (:gen-class)
   (:require olyp-central-api.app
             [com.stuartsierra.component :as component]
             [io.rkn.conformity :as conformity]
             [datomic.api :as d]
             [olyp-central-api.factories.user-factory :as user-factory]
-            [clojure.tools.logging :as log])
-  (:import [java.util UUID]))
+            [clojure.tools.logging :as log]))
 
 (defn generate-initial-seed-tx []
   [{:db/id (d/tempid :db.part/user)
-    :reservable-room/public-id (d/squuid)
+    :reservable-room/public-id (str (d/squuid))
     :reservable-room/name "Rom 5"}
 
    ;; TODO: Only create this data in dev mode
@@ -23,7 +22,7 @@
     :customer/city "Kolbotn"}
 
    {:db/id (d/tempid :db.part/user)
-    :user/public-id (UUID/fromString "54a495b3-3a20-4d37-88bf-9a433d66db35")
+    :user/public-id "54a495b3-3a20-4d37-88bf-9a433d66db35"
     :user/email "quentin@test.com"
     :user/name "Quentin Test"
     :user/customer (d/tempid :db.part/user -1)
