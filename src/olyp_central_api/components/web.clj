@@ -8,12 +8,13 @@
 (defn ring-handler [req]
   {:status 200 :body "yay"})
 
-(defrecord Web [port]
+(defrecord Web [ip port]
   component/Lifecycle
 
   (start [component]
     (let [handler (olyp-central-api.web-handler/create-handler (-> component :database))
-          server (org.httpkit.server/run-server handler {:port port})]
+          server (org.httpkit.server/run-server handler {:port port
+                                                         :ip (or ip "0.0.0.0")})]
       (log/info (str "Started web server on port " port))
       (assoc component
         :server server)))
@@ -21,5 +22,5 @@
     (@(:server component) :timeout (.convert TimeUnit/MILLISECONDS 1 TimeUnit/SECONDS))
     (dissoc component :server)))
 
-(defn create-web [{:keys [port]}]
-  (Web. port))
+(defn create-web [{:keys [ip port]}]
+  (Web. ip port))
