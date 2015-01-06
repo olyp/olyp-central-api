@@ -13,7 +13,7 @@
    :email (:user/email ent)
    :name (:user/name ent)
    :auth-token (:user/auth-token ent)
-   :contract_id (get-in ent [:user/contract :contract/public-id])
+   :customer_id (get-in ent [:user/customer :customer/public-id])
    :version (datomic-util/get-most-recent-t ent)})
 
 (def users-collection-handler
