@@ -184,8 +184,7 @@
                     :params [db client-t eid updates-with-nil]
                     :code (let [updates (filter (fn [[key value]] (not (nil? value))) updates-with-nil)]
                             (doseq [[attr val] updates]
-                              (if-let [tx (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
-                                              ffirst)]
+                              (if-let [tx (datomic.api/q '[:find ?tx . :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)]
                                 (let [t (datomic.api/tx->t tx)]
                                   (if (> t client-t)
                                     (throw (ex-info (str "Attribute " attr " optimistically locked! Client version is " client-t ", database version is " t ".")
