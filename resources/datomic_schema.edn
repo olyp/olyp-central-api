@@ -21,7 +21,7 @@
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :user/contract
+     :db/ident :user/customer
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
@@ -42,65 +42,65 @@
 
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/public-id
+     :db/ident :customer/public-id
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db/unique :db.unique/value
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/type
+     :db/ident :customer/type
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
-    {:db/id #db/id[:db.part/user] :db/ident :contract.type/company}
-    {:db/id #db/id[:db.part/user] :db/ident :contract.type/person}
+    {:db/id #db/id[:db.part/user] :db/ident :customer.type/company}
+    {:db/id #db/id[:db.part/user] :db/ident :customer.type/person}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/brreg-id
+     :db/ident :customer/brreg-id
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/name
+     :db/ident :customer/name
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/address
+     :db/ident :customer/address
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/zip
+     :db/ident :customer/zip
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/city
+     :db/ident :customer/city
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/contact-person-name
+     :db/ident :customer/contact-person-name
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/contact-person-email
+     :db/ident :customer/contact-person-email
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :contract/contact-person-phone
+     :db/ident :customer/contact-person-phone
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}

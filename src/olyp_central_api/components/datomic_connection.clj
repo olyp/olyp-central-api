@@ -15,18 +15,18 @@
 
    ;; TODO: Only create this data in dev mode
    {:db/id (d/tempid :db.part/user -1)
-    :contract/public-id (str (d/squuid))
-    :contract/type :contract.type/company
-    :contract/brreg-id "123456789"
-    :contract/name "Quentin Inc."
-    :contract/zip "1410"
-    :contract/city "Kolbotn"}
+    :customer/public-id (str (d/squuid))
+    :customer/type :customer.type/company
+    :customer/brreg-id "123456789"
+    :customer/name "Quentin Inc."
+    :customer/zip "1410"
+    :customer/city "Kolbotn"}
 
    {:db/id (d/tempid :db.part/user)
     :user/public-id (UUID/fromString "54a495b3-3a20-4d37-88bf-9a433d66db35")
     :user/email "quentin@test.com"
     :user/name "Quentin Test"
-    :user/contract (d/tempid :db.part/user -1)
+    :user/customer (d/tempid :db.part/user -1)
     :user/bcrypt-password (user-factory/encrypt-password "test")
     :user/auth-token "78888a117972edc201892c53498321fa5bfeb31aec5e3bd722f127b1cb0c6757"}
 ])

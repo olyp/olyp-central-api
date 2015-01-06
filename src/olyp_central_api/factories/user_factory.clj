@@ -8,7 +8,7 @@
   [(v/presence-of "email")
    (v/format-of "email" :format #"^.*?@.*?\..*?$" :message "must be an e-mail address")
    (v/presence-of "name")
-   (v/presence-of "contract_id")])
+   (v/presence-of "customer_id")])
 
 (def user-creation-validators
   [(v/presence-of "password")])
@@ -20,7 +20,7 @@
   (apply
    v/validation-set
    (concat
-    [(v/all-keys-in #{"email" "name" "contract_id" "password"})]
+    [(v/all-keys-in #{"email" "name" "customer_id" "password"})]
     user-base-validators
     user-creation-validators)))
 
@@ -28,7 +28,7 @@
   (apply
    v/validation-set
    (concat
-    [(v/all-keys-in #{"email" "name" "contract_id" "version"})]
+    [(v/all-keys-in #{"email" "name" "customer_id" "version"})]
     user-base-validators
     user-update-validators)))
 
@@ -44,7 +44,7 @@
   (let [user-tempid (d/tempid :db.part/user)
         tx-res @(d/transact
                  datomic-conn
-                 [[:db/add user-tempid :user/contract [:contract/public-id (data "contract_id")]]
+                 [[:db/add user-tempid :user/customer [:customer/public-id (data "customer_id")]]
                   [:db/add user-tempid :user/public-id (d/squuid)]
                   [:db/add user-tempid :user/email (data "email")]
                   [:db/add user-tempid :user/name (data "name")]
@@ -59,7 +59,7 @@
                  [[:optimistic-add (data "version") user-id
                    {:user/email (data "email")
                     :user/name (data "name")
-                    :user/contract [:contract/public-id (data "contract_id")]}]])]
+                    :user/customer [:customer/public-id (data "customer_id")]}]])]
     (d/entity (:db-after tx-res) user-id)))
 
 (defn delete-user [ent datomic-conn]
