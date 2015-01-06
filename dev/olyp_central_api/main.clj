@@ -12,5 +12,3 @@
    (olyp-central-api.app/create-system)
    (component/start)
    (def app)))
-
-
