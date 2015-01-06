@@ -2,7 +2,7 @@
  {:txes
   [[{:db/id #db/id[:db.part/db]
      :db/ident :user/public-id
-     :db/valueType :db.type/uuid
+     :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db/unique :db.unique/value
      :db.install/_attribute :db.part/db}
@@ -111,7 +111,7 @@
 
     {:db/id #db/id[:db.part/db]
      :db/ident :reservable-room/public-id
-     :db/valueType :db.type/uuid
+     :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
      :db/unique :db.unique/value
      :db.install/_attribute :db.part/db}
@@ -127,7 +127,7 @@
 
     {:db/id #db/id[:db.part/db]
      :db/ident :room-reservation/public-id
-     :db/valueType :db.type/uuid
+     :db/valueType :db.type/string
      :db/unique :db.unique/value
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
@@ -163,7 +163,7 @@
 
     {:db/id #db/id[:db.part/db]
      :db/ident :room-booking/public-id
-     :db/valueType :db.type/uuid
+     :db/valueType :db.type/string
      :db/unique :db.unique/value
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}

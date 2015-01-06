@@ -2,8 +2,7 @@
   (:require [datomic.api :as d]
             [cheshire.core]
             [liberator.core :refer [resource]])
-  (:import [com.fasterxml.jackson.core JsonParseException]
-           [java.util UUID]))
+  (:import [com.fasterxml.jackson.core JsonParseException]))
 
 (defn ctx-for-entity [ent]
   {:datomic-entity ent
@@ -73,7 +72,7 @@
 
 (defn get-user-entity-from-route-params [ctx-attr]
   (fn [ctx]
-    (let [user-id (UUID/fromString (get-in ctx [:request :route-params :user-id]))
+    (let [user-id (get-in ctx [:request :route-params :user-id])
           db (get-datomic-db ctx)]
       (if-let [u-eid (ffirst (d/q '[:find ?u :in $ ?uid :where [?u :user/public-id ?uid]] db user-id))]
         {ctx-attr (d/entity db u-eid)}))))

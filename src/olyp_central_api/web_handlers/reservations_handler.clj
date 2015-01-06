@@ -4,8 +4,7 @@
             [olyp-central-api.liberator-util :as liberator-util]
             [cheshire.core]
             [liberator.core :refer [resource]])
-  (:import [java.util UUID]
-           [org.joda.time DateTime DateTimeZone]
+  (:import [org.joda.time DateTime DateTimeZone]
            [org.joda.time.format DateTimeFormat ISODateTimeFormat]))
 
 (defn reservable-room-to-public-value [ent]
@@ -101,7 +100,7 @@
    (fn [ctx]
      (if-let [reservable-room (d/entity
                                (liberator-util/get-datomic-db ctx)
-                               [:reservable-room/public-id (UUID/fromString (get-in ctx [:request :route-params :reservable-room-id]))])]
+                               [:reservable-room/public-id (get-in ctx [:request :route-params :reservable-room-id])])]
        {:olyp-reservable-room reservable-room}))
 
    :handle-ok
@@ -130,7 +129,7 @@
                                 [?reservation :room-reservation/ref ?booking]
                                 [?booking :room-booking/public-id ?booking-pubid]]
                               (liberator-util/get-datomic-db ctx)
-                              (UUID/fromString (get-in ctx [:request :route-params :booking-id])))]
+                              (get-in ctx [:request :route-params :booking-id]))]
           {:olyp-reservation (d/entity db reservation)}))))
 
    :delete!

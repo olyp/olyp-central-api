@@ -45,7 +45,7 @@
         tx-res @(d/transact
                  datomic-conn
                  [[:db/add user-tempid :user/customer [:customer/public-id (data "customer_id")]]
-                  [:db/add user-tempid :user/public-id (d/squuid)]
+                  [:db/add user-tempid :user/public-id (str (d/squuid))]
                   [:db/add user-tempid :user/email (data "email")]
                   [:db/add user-tempid :user/name (data "name")]
                   [:db/add user-tempid :user/bcrypt-password (encrypt-password (data "password"))]
