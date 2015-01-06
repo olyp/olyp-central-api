@@ -184,15 +184,15 @@
                     :params [db client-t eid updates-with-nil]
                     :code (let [updates (filter (fn [[key value]] (not (nil? value))) updates-with-nil)]
                             (doseq [[attr val] updates]
-                              (let [t (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
-                                          ffirst
-                                          datomic.api/tx->t)]
-                                (if (> t client-t)
-                                  (throw (ex-info (str "Attribute " attr " optimistically locked! Client version is " client-t ", database version is " t ".")
-                                                  {:type :optimistic-add
-                                                   :attr attr
-                                                   :client-t client-t
-                                                   :database-t t})))))
+                              (if-let [tx (-> (datomic.api/q '[:find ?tx :in $ ?eid ?attr :where [?eid ?attr _ ?tx]] db eid attr)
+                                              ffirst)]
+                                (let [t (datomic.api/tx->t tx)]
+                                  (if (> t client-t)
+                                    (throw (ex-info (str "Attribute " attr " optimistically locked! Client version is " client-t ", database version is " t ".")
+                                                    {:type :optimistic-add
+                                                     :attr attr
+                                                     :client-t client-t
+                                                     :database-t t}))))))
 
                             (let [client-ent (datomic.api/entity (datomic.api/as-of db client-t) eid)]
                               (->> updates
