@@ -4,6 +4,7 @@
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %-10contextName %logger{36} - %msg%n</pattern>
     </encoder>
   </appender>
+
   <logger name="olyp-central-api" level="DEBUG"/>
   <root level="INFO">
     <appender-ref ref="CONSOLE"/>
