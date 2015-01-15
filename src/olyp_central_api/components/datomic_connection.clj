@@ -3,25 +3,11 @@
             [io.rkn.conformity :as conformity]
             [clojure.java.io :as io]
             [datomic.api :as d]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [olyp-central-api.migrations :as migrations])
   (:import [java.util UUID]))
 
 (def schema (-> "datomic_schema.edn" io/resource slurp read-string))
-
-(defn migration-adding-is-invoiced-attr []
-  [{:db/id #db/id[:db.part/db]
-    :db/ident :room-booking/is-invoiced
-    :db/valueType :db.type/boolean
-    :db/index true
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}])
-
-(defn migration-setting-is-invoiced-attr [datomic-conn]
-  (let [db (d/db datomic-conn)]
-    (map
-     (fn [booking-eid]
-       [:db/add booking-eid :room-booking/is-invoiced false])
-     (d/q '[:find [?booking ...] :where [?booking :room-booking/public-id]] db))))
 
 (defrecord Database [connection-uri]
   component/Lifecycle
@@ -32,8 +18,9 @@
     (let [datomic-conn (d/connect connection-uri)]
       (log/info (str "Ensuring Datomic conforms to schema"))
       (conformity/ensure-conforms datomic-conn schema [:olyp/main-schema])
-      (conformity/ensure-conforms datomic-conn {:olyp/adding-is-invoiced-attr {:txes [(migration-adding-is-invoiced-attr)]}} [:olyp/adding-is-invoiced-attr])
-      (conformity/ensure-conforms datomic-conn {:olyp/setting-is-invoiced-attr {:txes [(migration-setting-is-invoiced-attr datomic-conn)]}} [:olyp/setting-is-invoiced-attr])
+      (log/info (str "Running migrations"))
+      (conformity/ensure-conforms datomic-conn {:olyp/adding-is-invoiced-attr {:txes [(migrations/adding-is-invoiced-attr)]}} [:olyp/adding-is-invoiced-attr])
+      (conformity/ensure-conforms datomic-conn {:olyp/setting-is-invoiced-attr {:txes [(migrations/setting-is-invoiced-attr datomic-conn)]}} [:olyp/setting-is-invoiced-attr])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))
