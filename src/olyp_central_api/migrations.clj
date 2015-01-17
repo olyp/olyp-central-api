@@ -1,14 +1,6 @@
 (ns olyp-central-api.migrations
   (:require [datomic.api :as d]))
 
-(defn adding-is-invoiced-attr []
-  [{:db/id #db/id[:db.part/db]
-    :db/ident :room-booking/is-invoiced
-    :db/valueType :db.type/boolean
-    :db/index true
-    :db/cardinality :db.cardinality/one
-    :db.install/_attribute :db.part/db}])
-
 (defn setting-is-invoiced-attr [datomic-conn]
   (let [db (d/db datomic-conn)]
     (map

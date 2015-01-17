@@ -243,4 +243,97 @@
                               [[:db/add eid :room-reservation/from from]
                                [:db/add eid :room-reservation/to to]
                                [:db/add eid :room-reservation/reservable-room (:db/id reservable-room)]]))}}]]}
- }
+ :olyp/invoicing-attrs
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :room-booking/is-invoiced
+     :db/valueType :db.type/boolean
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer/complimentary-booking-hours
+     :db/valueType :db.type/long
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/key
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/month
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/customer
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/invoice-number
+     :db/valueType :db.type/bigint
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/invoice-key
+     :db/valueType :db.type/string
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/sort-order
+     :db/valueType :db.type/long
+     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/quantity
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/unit-price
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/tax
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/product-code
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/description
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]]}}
