@@ -4,7 +4,9 @@
   (:import [org.joda.time DateTime DateTimeZone Minutes]
            [java.math BigDecimal BigInteger]))
 
-(defn find-bookings-for-customer [db end-of-month customer-eid]
+(def product-code-rentable-room 1)
+
+(defn find-bookings-for-customer [db end-of-month customer]
   (map
    #(d/entity db %)
    (d/q '[:find [?e ...]
@@ -18,11 +20,10 @@
           [(< ?reservation-from ?end-of-month)]]
         db
         end-of-month
-        customer-eid)))
+        (:db/id customer))))
 
-(defn get-customer-invoice-base-data [db customer-eid end-of-month]
-  {:customer (d/entity db customer-eid)
-   :bookings (find-bookings-for-customer db end-of-month customer-eid)
+(defn get-customer-invoice-base-data [db customer end-of-month]
+  {:bookings (find-bookings-for-customer db end-of-month customer)
    :rentals []})
 
 (defn get-booking-total-minutes [booking]
@@ -42,20 +43,22 @@
           {:quantity total-hours
            :unit-price (BigDecimal. "375.00000")
            :tax 25
-           :product-code 1
+           :product-code product-code-rentable-room
            :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)}))
       (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) user-bookings)))
    (group-by :room-booking/user bookings)))
 
-(defn get-customer-invoice [db {:keys [bookings rentals customer]}]
-  (get-booking-lines bookings))
+(defn get-customer-invoice [db {:keys [bookings rentals]}]
+  {:lines (get-booking-lines bookings)})
 
 (defn prepare-invoices-for-month [year month datomic-conn]
   (let [db (d/db datomic-conn)
         end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
                          (.plusMonths 1)
-                         (.toDate))]
-    (->> (d/q '[:find [?e ...] :where [?e :customer/public-id]] db)
-         (map #(get-customer-invoice-base-data db % end-of-month))
-         (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
-         (map #(get-customer-invoice db %)))))
+                         (.toDate))
+        customers (map #(d/entity db %) (d/q '[:find [?e ...] :where [?e :customer/public-id]] db))]
+    (zipmap (map :customer/public-id customers)
+            (->> customers
+                 (map #(get-customer-invoice-base-data db % end-of-month))
+                 (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
+                 (map #(get-customer-invoice db %))))))

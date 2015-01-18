@@ -52,6 +52,8 @@
 (deftest creates-invoice-for-month
   (with-datomic-conn datomic-conn
     (let [user-quentin (create-user datomic-conn "quentin@test.com" "Quentin Test" "test")
+          user-pavlov (create-user datomic-conn "pavlov@test.com" "I.P. Pavlova" "test")
+          user-edvard (create-user datomic-conn "edvard@test.com" "Edvard Grieg Stokke" "test")
           reservable-room (create-reservable-room datomic-conn)]
 
       (create-bookings
@@ -59,6 +61,15 @@
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
        (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00)
        (LocalDateTime. 2015 02, 10, 14, 00) (LocalDateTime. 2015 02, 10, 17, 00))
+
+      (create-bookings
+       reservable-room user-pavlov datomic-conn
+       (LocalDateTime. 2014 12, 31, 9, 00) (LocalDateTime. 2014 12, 31, 15, 00)
+       (LocalDateTime. 2015 01, 31, 18, 00) (LocalDateTime. 2015 01, 31, 22, 30))
+
+      (create-bookings
+       reservable-room user-edvard datomic-conn
+       (LocalDateTime. 2015 02, 01, 9, 00) (LocalDateTime. 2015 02, 01, 11, 00))
 
       (let [invoices (invoices-factory/prepare-invoices-for-month 2015 1 datomic-conn)]
         (prn invoices)))))
