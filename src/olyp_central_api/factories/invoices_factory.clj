@@ -32,6 +32,12 @@
                                 (DateTime. (:room-reservation/to reservation)))
         (.getMinutes))))
 
+(defn get-hourly-price [user room]
+  (->> (->> user :user/customer :customer-room-booking-agreement/_customer)
+       (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
+       (first)
+       :customer-room-booking-agreement/hourly-price))
+
 (defn get-booking-lines [bookings]
   (mapcat
    (fn [[user user-bookings]]
@@ -41,7 +47,7 @@
               total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
                                    (BigDecimal. "60"))]
           {:quantity total-hours
-           :unit-price (BigDecimal. "375.00000")
+           :unit-price (get-hourly-price user room)
            :tax (-> user :user/customer :customer/room-booking-tax)
            :product-code product-code-rentable-room
            :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)}))

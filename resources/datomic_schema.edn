@@ -256,14 +256,33 @@
 
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :customer/complimentary-booking-hours
+     :db/ident :customer/room-booking-tax
      :db/valueType :db.type/long
-     :db/index true
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-booking-agreement/customer
+     :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :customer/room-booking-tax
+     :db/ident :customer-room-booking-agreement/reservable-room
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-booking-agreement/hourly-price
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-booking-agreement/free-hours
      :db/valueType :db.type/long
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
