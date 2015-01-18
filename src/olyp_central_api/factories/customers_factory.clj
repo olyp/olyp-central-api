@@ -2,12 +2,14 @@
   (:require [datomic.api :as d]
             [validateur.validation :as v]))
 
-(def customer-base-attrs #{"name" "address" "zip" "city" "contact_person_email" "contact_person_phone"})
+(def customer-base-attrs #{"name" "address" "zip" "city" "contact_person_email" "contact_person_phone" "room_booking_tax"})
 (def company-customer-base-attrs (clojure.set/union #{"brreg_id" "contact_person_name"} customer-base-attrs))
 (def person-customer-base-attrs customer-base-attrs)
 
 (def customer-base-validators
   [(v/presence-of "name")
+   (v/presence-of "room_booking_tax")
+   (v/numericality-of "room_booking_tax" :only-integer true :gte 0 :lte 100)
    (v/presence-of "zip")
    (v/format-of "zip" :format #"^\d{4}$" :message "must be a four digit number")
    (v/presence-of "city")])
@@ -61,7 +63,8 @@
                    [:db/add tempid :customer/brreg-id (data "brreg_id")]
                    [:db/add tempid :customer/name (data "name")]
                    [:db/add tempid :customer/zip (data "zip")]
-                   [:db/add tempid :customer/city (data "city")]]
+                   [:db/add tempid :customer/city (data "city")]
+                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]]
                   (filter
                    (fn [[f e a v]] (not (nil? v)))
                    [[:db/add tempid :customer/address (data "address")]
@@ -79,7 +82,8 @@
                    [:db/add tempid :customer/type :customer.type/person]
                    [:db/add tempid :customer/name (data "name")]
                    [:db/add tempid :customer/zip (data "zip")]
-                   [:db/add tempid :customer/city (data "city")]]
+                   [:db/add tempid :customer/city (data "city")]
+                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]]
                   (filter
                    (fn [[f e a v]] (not (nil? v)))
                    [[:db/add tempid :customer/address (data "address")]
@@ -96,6 +100,7 @@
                     :customer/name (data "name")
                     :customer/zip (data "zip")
                     :customer/city (data "city")
+                    :customer/room-booking-tax (data "room_booking_tax")
                     :customer/address (data "address")
                     :customer/contact-person-name (data "contact_person_name")
                     :customer/contact-person-email (data "contact_person_email")
@@ -110,6 +115,7 @@
                    {:customer/name (data "name")
                     :customer/zip (data "zip")
                     :customer/city (data "city")
+                    :customer/room-booking-tax (data "room_booking_tax")
                     :customer/address (data "address")
                     :customer/contact-person-email (data "contact_person_email")
                     :customer/contact-person-phone (data "contact_person_phone")}]])]

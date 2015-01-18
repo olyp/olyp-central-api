@@ -42,7 +42,7 @@
                                    (BigDecimal. "60"))]
           {:quantity total-hours
            :unit-price (BigDecimal. "375.00000")
-           :tax 25
+           :tax (-> user :user/customer :customer/room-booking-tax)
            :product-code product-code-rentable-room
            :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)}))
       (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) user-bookings)))

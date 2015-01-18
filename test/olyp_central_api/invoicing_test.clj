@@ -36,11 +36,12 @@
      user
      datomic-conn)))
 
-(defn create-user [datomic-conn email name password]
+(defn create-user [datomic-conn email name password booking-tax]
   (let [customer (customers-factory/create-person-customer
                   {"name" "Quentin Test"
                    "zip" "2080"
-                   "city" "Eidsvoll"}
+                   "city" "Eidsvoll"
+                   "room_booking_tax" booking-tax}
                   datomic-conn)]
     (user-factory/create-user
      {"customer_id" (:customer/public-id customer)
@@ -51,9 +52,9 @@
 
 (deftest creates-invoice-for-month
   (with-datomic-conn datomic-conn
-    (let [user-quentin (create-user datomic-conn "quentin@test.com" "Quentin Test" "test")
-          user-pavlov (create-user datomic-conn "pavlov@test.com" "I.P. Pavlova" "test")
-          user-edvard (create-user datomic-conn "edvard@test.com" "Edvard Grieg Stokke" "test")
+    (let [user-quentin (create-user datomic-conn "quentin@test.com" "Quentin Test" "test" 25)
+          user-pavlov (create-user datomic-conn "pavlov@test.com" "I.P. Pavlova" "test" 0)
+          user-edvard (create-user datomic-conn "edvard@test.com" "Edvard Grieg Stokke" "test" 25)
           reservable-room (create-reservable-room datomic-conn)]
 
       (create-bookings
