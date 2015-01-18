@@ -36,23 +36,26 @@
      user
      datomic-conn)))
 
+(defn create-user [datomic-conn email name password]
+  (let [customer (customers-factory/create-person-customer
+                  {"name" "Quentin Test"
+                   "zip" "2080"
+                   "city" "Eidsvoll"}
+                  datomic-conn)]
+    (user-factory/create-user
+     {"customer_id" (:customer/public-id customer)
+      "email" email
+      "name" name
+      "password" password}
+     datomic-conn)))
+
 (deftest creates-invoice-for-month
   (with-datomic-conn datomic-conn
-    (let [customer (customers-factory/create-person-customer
-                    {"name" "Quentin Test"
-                     "zip" "2080"
-                     "city" "Eidsvoll"}
-                    datomic-conn)
-          user (user-factory/create-user
-                {"customer_id" (:customer/public-id customer)
-                 "email" "quentin@test.com"
-                 "name" "Quentin Test"
-                 "password "test}
-                datomic-conn)
+    (let [user-quentin (create-user datomic-conn "quentin@test.com" "Quentin Test" "test")
           reservable-room (create-reservable-room datomic-conn)]
 
       (create-bookings
-       reservable-room user datomic-conn
+       reservable-room user-quentin datomic-conn
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
        (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00)
        (LocalDateTime. 2015 02, 10, 14, 00) (LocalDateTime. 2015 02, 10, 17, 00))
