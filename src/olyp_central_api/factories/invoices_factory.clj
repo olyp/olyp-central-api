@@ -6,6 +6,7 @@
 
 (def product-code-rentable-room 1)
 (def big-decimal-minus-one (BigDecimal. "-1"))
+(def big-decimal-sixty (BigDecimal. "60"))
 
 (defn find-bookings-for-customer [db end-of-month customer]
   (map
@@ -55,7 +56,7 @@
    (fn [[user user-bookings]]
      (let [total-minutes (reduce + (map get-booking-total-minutes user-bookings))
            total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
-                                (BigDecimal. "60"))]
+                                big-decimal-60)]
        {:quantity total-hours
         :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         :tax (-> user :user/customer :customer/room-booking-tax)
