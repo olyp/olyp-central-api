@@ -87,8 +87,17 @@
 
         (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
           (is (= (count (:lines quentin-invoice)) 2))
+          (is (= (-> quentin-invoice :lines (nth 0) :unit-price) (BigDecimal. "375.00000")))
+          (is (= (-> quentin-invoice :lines (nth 0) :quantity) (BigDecimal. "7")))
+          (is (= (-> quentin-invoice :lines (nth 0) :tax) 25))
+          (is (= (-> quentin-invoice :lines (nth 1) :unit-price) (BigDecimal. "-375.00000")))
+          (is (= (-> quentin-invoice :lines (nth 1) :quantity) (BigDecimal. "4")))
+          (is (= (-> quentin-invoice :lines (nth 1) :tax) 25))
           (prn quentin-invoice))
 
         (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
           (is (= (count (:lines pavlov-invoice)) 1))
+          (is (= (-> pavlov-invoice :lines (nth 0) :unit-price) (BigDecimal. "350.00000")))
+          (is (= (-> pavlov-invoice :lines (nth 0) :quantity) (BigDecimal. "10.5")))
+          (is (= (-> pavlov-invoice :lines (nth 0) :tax) 0))
           (prn pavlov-invoice))))))
