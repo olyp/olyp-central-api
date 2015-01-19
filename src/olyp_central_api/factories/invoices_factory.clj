@@ -39,7 +39,7 @@
   (let [free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))]
     (if (= 0 (.compareTo free-hours BigDecimal/ZERO))
       []
-      (let [actual-hours (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map ::total-hours booking-lines))
+      (let [actual-hours (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map :quantity booking-lines))
             line-hours (if (= 1 (.compareTo actual-hours free-hours))
                          free-hours
                          actual-hours)]
@@ -61,8 +61,7 @@
         :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         :tax (-> user :user/customer :customer/room-booking-tax)
         :product-code product-code-rentable-room
-        :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)
-        ::total-hours total-hours}))
+        :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)}))
    (group-by :room-booking/user room-bookings)))
 
 (defn get-customer-invoice [db {:keys [bookings rentals customer]}]
