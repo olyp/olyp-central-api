@@ -81,4 +81,12 @@
        (LocalDateTime. 2015 02, 01, 9, 00) (LocalDateTime. 2015 02, 01, 11, 00))
 
       (let [invoices (invoices-factory/prepare-invoices-for-month 2015 1 datomic-conn)]
-        (prn invoices)))))
+        (is (contains? invoices (-> user-quentin :user/customer :customer/public-id)))
+        (is (contains? invoices (-> user-pavlov :user/customer :customer/public-id)))
+        (is (not (contains? invoices (-> user-edvard :user/customer :customer/public-id))))
+
+        (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
+          (prn quentin-invoice))
+
+        (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
+          (prn pavlov-invoice))))))
