@@ -56,7 +56,7 @@
    (fn [[user user-bookings]]
      (let [total-minutes (reduce + (map get-booking-total-minutes user-bookings))
            total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
-                                big-decimal-60)]
+                                big-decimal-sixty)]
        {:quantity total-hours
         :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         :tax (-> user :user/customer :customer/room-booking-tax)
