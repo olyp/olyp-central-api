@@ -86,7 +86,9 @@
         (is (not (contains? invoices (-> user-edvard :user/customer :customer/public-id))))
 
         (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
+          (is (= (count (:lines quentin-invoice)) 2))
           (prn quentin-invoice))
 
         (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
+          (is (= (count (:lines pavlov-invoice)) 1))
           (prn pavlov-invoice))))))
