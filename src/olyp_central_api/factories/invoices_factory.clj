@@ -45,7 +45,7 @@
         (if (= 0 (.compareTo line-hours BigDecimal/ZERO))
           []
           [{:quantity line-hours
-            :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+            :unit-price (.multiply (:customer-room-booking-agreement/hourly-price room-booking-agreement) big-decimal-minus-one)
             :tax (:customer/room-booking-tax customer)
             :product-code product-code-rentable-room
             :description (str "Monthly free hours, " (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name) ": " line-hours)}])))))
@@ -57,7 +57,7 @@
            total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
                                 (BigDecimal. "60"))]
        {:quantity total-hours
-        :unit-price (.multiply (:customer-room-booking-agreement/hourly-price room-booking-agreement) big-decimal-minus-one)
+        :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         :tax (-> user :user/customer :customer/room-booking-tax)
         :product-code product-code-rentable-room
         :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)
