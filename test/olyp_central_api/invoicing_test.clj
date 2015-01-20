@@ -80,7 +80,7 @@
        reservable-room user-edvard datomic-conn
        (LocalDateTime. 2015 02, 01, 9, 00) (LocalDateTime. 2015 02, 01, 11, 00))
 
-      (let [invoices (invoices-factory/prepare-invoices-for-month 2015 1 datomic-conn)]
+      (let [invoices (invoices-factory/prepare-invoices-for-month 2015 1 (d/db datomic-conn))]
         (is (contains? invoices (-> user-quentin :user/customer :customer/public-id)))
         (is (contains? invoices (-> user-pavlov :user/customer :customer/public-id)))
         (is (not (contains? invoices (-> user-edvard :user/customer :customer/public-id))))

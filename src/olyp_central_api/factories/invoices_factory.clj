@@ -79,9 +79,8 @@
         (concat lines (get-free-hours-lines room-booking-agreement customer lines))))
     (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) bookings))})
 
-(defn prepare-invoices-for-month [year month datomic-conn]
-  (let [db (d/db datomic-conn)
-        end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
+(defn prepare-invoices-for-month [year month db]
+  (let [end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
                          (.plusMonths 1)
                          (.toDate))
         customers (map #(d/entity db %) (d/q '[:find [?e ...] :where [?e :customer/public-id]] db))]
