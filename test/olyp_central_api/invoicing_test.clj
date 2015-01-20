@@ -52,7 +52,7 @@
       "password" password}
      datomic-conn)))
 
-(deftest creates-invoice-for-month
+(deftest preparing-invoice-for-month
   (with-datomic-conn datomic-conn
     (let [reservable-room (create-reservable-room datomic-conn)
           user-quentin (create-user datomic-conn
