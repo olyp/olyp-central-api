@@ -103,3 +103,20 @@
           (is (= (-> pavlov-invoice :lines (nth 0) :quantity) (BigDecimal. "10.5")))
           (is (= (-> pavlov-invoice :lines (nth 0) :tax) 0))
           (prn pavlov-invoice))))))
+
+(deftest creating-invoices-for-month
+  (with-datomic-conn datomic-conn
+    (let [reservable-room (create-reservable-room datomic-conn)
+          user-quentin (create-user datomic-conn
+                                    "quentin@test.com" "Quentin Test" "test"
+                                    25 "375.00000" 4)]
+      (create-bookings
+       reservable-room user-quentin datomic-conn
+       (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
+       (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00))
+
+      (is (= 0 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/public-id]] (d/db datomic-conn)))))
+
+      (invoices-factory/create-invoices-for-month 2015 1 datomic-conn)
+
+      (is (= 1 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/public-id]] (d/db datomic-conn))))))))

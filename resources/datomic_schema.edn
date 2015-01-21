@@ -291,6 +291,29 @@
 
 
     {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-batch/public-id
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-batch/month
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-batch/invoice
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db.install/_attribute :db.part/db}
+
+
+
+
+    {:db/id #db/id[:db.part/db]
      :db/ident :invoice/key
      :db/valueType :db.type/string
      :db/unique :db.unique/value
@@ -361,4 +384,17 @@
      :db/ident :invoice-line/description
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}]]}}
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/user]
+     :db/ident :auto-increment-bigint
+     :db/doc "MySQL style, baby"
+     :db/fn #db/fn {:lang "clojure"
+                    :params [db eid attr]
+                    :code (let [current (or (d/q '[:find (max ?val) .
+                                                   :in $ ?attr
+                                                   :where [_ ?attr ?val]]
+                                                 db
+                                                 attr)
+                                            java.math.BigInteger/ONE)]
+                            [[:db/add eid attr (.add current java.math.BigInteger/ONE)]])}}]]}}
