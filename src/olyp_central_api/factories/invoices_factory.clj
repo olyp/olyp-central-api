@@ -68,7 +68,8 @@
    (group-by :room-booking/user room-bookings)))
 
 (defn get-customer-invoice [db {:keys [bookings rentals customer]}]
-  {:lines
+  {:customer customer
+   :lines
    (mapcat
     (fn [[room room-bookings]]
       (let [room-booking-agreement (->> customer
@@ -84,8 +85,7 @@
                          (.plusMonths 1)
                          (.toDate))
         customers (map #(d/entity db %) (d/q '[:find [?e ...] :where [?e :customer/public-id]] db))]
-    (zipmap (map :customer/public-id customers)
-            (->> customers
-                 (map #(get-customer-invoice-base-data db % end-of-month))
-                 (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
-                 (map #(get-customer-invoice db %))))))
+    (->> customers
+         (map #(get-customer-invoice-base-data db % end-of-month))
+         (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
+         (map #(get-customer-invoice db %)))))
