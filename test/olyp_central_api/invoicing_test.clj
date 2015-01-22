@@ -94,15 +94,13 @@
           (is (= (-> quentin-invoice :lines (nth 0) :tax) 25))
           (is (= (-> quentin-invoice :lines (nth 1) :unit-price) (BigDecimal. "-375.00000")))
           (is (= (-> quentin-invoice :lines (nth 1) :quantity) (BigDecimal. "4")))
-          (is (= (-> quentin-invoice :lines (nth 1) :tax) 25))
-          (prn quentin-invoice))
+          (is (= (-> quentin-invoice :lines (nth 1) :tax) 25)))
 
         (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
           (is (= (count (:lines pavlov-invoice)) 1))
           (is (= (-> pavlov-invoice :lines (nth 0) :unit-price) (BigDecimal. "350.00000")))
           (is (= (-> pavlov-invoice :lines (nth 0) :quantity) (BigDecimal. "10.5")))
-          (is (= (-> pavlov-invoice :lines (nth 0) :tax) 0))
-          (prn pavlov-invoice))))))
+          (is (= (-> pavlov-invoice :lines (nth 0) :tax) 0)))))))
 
 (deftest creating-invoices-for-month
   (with-datomic-conn datomic-conn
@@ -115,8 +113,29 @@
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
        (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00))
 
-      (is (= 0 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/public-id]] (d/db datomic-conn)))))
+      (is (= 0 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/finalized false]] (d/db datomic-conn)))))
 
       (invoices-factory/create-invoices-for-month 2015 1 datomic-conn)
 
-      (is (= 1 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/public-id]] (d/db datomic-conn))))))))
+      (is (= 1 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/finalized false]] (d/db datomic-conn)))))
+      (let [db (d/db datomic-conn)
+            batch (d/entity db (d/q '[:find ?e . :where [?e :invoice-batch/finalized false]] db))]
+        (is (= false (:invoice-batch/finalized batch)))
+        (is (= "2015-1" (:invoice-batch/month batch)))
+        (is (= 1 (count (:invoice-batch/invoices batch))))
+        (let [invoice (first (:invoice-batch/invoices batch))]
+          (prn (d/touch invoice))
+          (is (= "2015-1" (:invoice/month invoice)))
+          (let [invoice-lines (->>
+                               (d/q '[:find [?e ...] :in $ ?key :where [?e :invoice-line/invoice-key ?key]]
+                                    db
+                                    (:invoice/key invoice))
+                               (map #(d/entity db %))
+                               (sort-by :invoice-line/sort-order))]
+            (is (= 2 (count invoice-lines)))
+            (is (= (BigDecimal. "375.00000") (-> invoice-lines (nth 0) :invoice-line/unit-price)))
+            (is (= (BigDecimal. "7") (-> invoice-lines (nth 0) :invoice-line/quantity)))
+            (is (= 25 (-> invoice-lines (nth 0) :invoice-line/tax)))
+            (is (= (BigDecimal. "-375.00000") (-> invoice-lines (nth 1) :invoice-line/unit-price)))
+            (is (= (BigDecimal. "4") (-> invoice-lines (nth 1) :invoice-line/quantity)))
+            (is (= 25 (-> invoice-lines (nth 1) :invoice-line/tax)))))))))
