@@ -114,7 +114,8 @@
             (map-indexed
              (fn [idx line]
                (let [line-tempid (d/tempid :db.part/user)]
-                 [[:db/add line-tempid :invoice-line/invoice-key invoice-key]
+                 [[:db/add line-tempid :invoice-line/public-id (str (d/squuid))]
+                  [:db/add line-tempid :invoice-line/invoice-key invoice-key]
                   [:db/add line-tempid :invoice-line/sort-order idx]
                   [:db/add line-tempid :invoice-line/quantity (:quantity line)]
                   [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
@@ -130,3 +131,5 @@
         tx-res @(d/transact datomic-conn
                             (facts-for-create-invoice-batch-for-month year month batch-tempid db))]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) batch-tempid))))
+
+(defn update-invoice-batch [batch-id changes])
