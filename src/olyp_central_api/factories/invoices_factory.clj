@@ -90,7 +90,7 @@
          (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
          (map #(get-customer-invoice db %)))))
 
-(defn create-invoices-for-month [year month datomic-conn]
+(defn create-invoice-batch-for-month [year month datomic-conn]
   (let [db (d/db datomic-conn)
         invoices-data (map
                        (fn [invoice]

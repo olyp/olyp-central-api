@@ -115,7 +115,7 @@
 
       (is (= 0 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/finalized false]] (d/db datomic-conn)))))
 
-      (invoices-factory/create-invoices-for-month 2015 1 datomic-conn)
+      (invoices-factory/create-invoice-batch-for-month 2015 1 datomic-conn)
 
       (is (= 1 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/finalized false]] (d/db datomic-conn)))))
       (let [db (d/db datomic-conn)
