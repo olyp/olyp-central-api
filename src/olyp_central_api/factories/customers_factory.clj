@@ -3,7 +3,7 @@
             [validateur.validation :as v])
   (:import [java.math BigDecimal]))
 
-(def customer-base-attrs #{"name" "address" "zip" "city" "contact_person_email" "contact_person_phone" "room_booking_tax" "room_booking_hourly_price" "room_booking_free_hours"})
+(def customer-base-attrs #{"name" "address" "zip" "city" "contact_person_email" "contact_person_phone" "room_booking_tax" "room_booking_hourly_price" "room_booking_free_hours" "room_rental_tax"})
 (def company-customer-base-attrs (clojure.set/union #{"brreg_id" "contact_person_name"} customer-base-attrs))
 (def person-customer-base-attrs customer-base-attrs)
 
@@ -11,6 +11,8 @@
   [(v/presence-of "name")
    (v/presence-of "room_booking_tax")
    (v/numericality-of "room_booking_tax" :only-integer true :gte 0 :lte 100)
+   (v/presence-of "room_rental_tax")
+   (v/numericality-of "room_rental_tax" :only-integer true :gte 0 :lte 100)
    (v/presence-of "room_booking_hourly_price")
    (v/format-of "room_booking_hourly_price" :format #"^-?\d+\.\d{5}$" :message "must be a valid monetary value")
    (v/presence-of "room_booking_free_hours" :only-integer true :gte 0)
@@ -94,7 +96,8 @@
                    [:db/add tempid :customer/name (data "name")]
                    [:db/add tempid :customer/zip (data "zip")]
                    [:db/add tempid :customer/city (data "city")]
-                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]]
+                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]
+                   [:db/add tempid :customer/room-rental-tax (data "room_rental_tax")]]
                   (create-room-booking-agreement-facts datomic-conn data tempid)
                   (filter
                    (fn [[f e a v]] (not (nil? v)))
@@ -114,7 +117,8 @@
                    [:db/add tempid :customer/name (data "name")]
                    [:db/add tempid :customer/zip (data "zip")]
                    [:db/add tempid :customer/city (data "city")]
-                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]]
+                   [:db/add tempid :customer/room-booking-tax (data "room_booking_tax")]
+                   [:db/add tempid :customer/room-rental-tax (data "room_rental_tax")]]
                   (create-room-booking-agreement-facts datomic-conn data tempid)
                   (filter
                    (fn [[f e a v]] (not (nil? v)))
@@ -134,6 +138,7 @@
                      :customer/zip (data "zip")
                      :customer/city (data "city")
                      :customer/room-booking-tax (data "room_booking_tax")
+                     :customer/room-rental-tax (data "room_rental_tax")
                      :customer/address (data "address")
                      :customer/contact-person-name (data "contact_person_name")
                      :customer/contact-person-email (data "contact_person_email")
@@ -151,6 +156,7 @@
                      :customer/zip (data "zip")
                      :customer/city (data "city")
                      :customer/room-booking-tax (data "room_booking_tax")
+                     :customer/room-rental-tax (data "room_rental_tax")
                      :customer/address (data "address")
                      :customer/contact-person-email (data "contact_person_email")
                      :customer/contact-person-phone (data "contact_person_phone")}]]

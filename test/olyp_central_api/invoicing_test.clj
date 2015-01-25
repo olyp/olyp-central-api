@@ -36,12 +36,13 @@
      user
      datomic-conn)))
 
-(defn create-user [datomic-conn email name password booking-tax hourly-price free-hours]
+(defn create-user [datomic-conn email name password booking-tax rental-tax hourly-price free-hours]
   (let [customer (customers-factory/create-person-customer
                   {"name" "Quentin Test"
                    "zip" "2080"
                    "city" "Eidsvoll"
                    "room_booking_tax" booking-tax
+                   "room_rental_tax" rental-tax
                    "room_booking_hourly_price" hourly-price
                    "room_booking_free_hours" free-hours}
                   datomic-conn)]
@@ -57,13 +58,13 @@
     (let [reservable-room (create-reservable-room datomic-conn)
           user-quentin (create-user datomic-conn
                                     "quentin@test.com" "Quentin Test" "test"
-                                    25 "375.00000" 4)
+                                    25 25 "375.00000" 4)
           user-pavlov (create-user datomic-conn
                                    "pavlov@test.com" "I.P. Pavlova" "test"
-                                   0 "350.00000" 0)
+                                   0 0 "350.00000" 0)
           user-edvard (create-user datomic-conn
                                    "edvard@test.com" "Edvard Grieg Stokke" "test"
-                                   25 "375.00000" 0)]
+                                   25 25 "375.00000" 0)]
 
       (create-bookings
        reservable-room user-quentin datomic-conn
@@ -107,7 +108,7 @@
     (let [reservable-room (create-reservable-room datomic-conn)
           user-quentin (create-user datomic-conn
                                     "quentin@test.com" "Quentin Test" "test"
-                                    25 "375.00000" 4)]
+                                    25 25 "375.00000" 4)]
       (create-bookings
        reservable-room user-quentin datomic-conn
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
