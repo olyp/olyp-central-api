@@ -131,5 +131,3 @@
         tx-res @(d/transact datomic-conn
                             (facts-for-create-invoice-batch-for-month year month batch-tempid db))]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) batch-tempid))))
-
-(defn update-invoice-batch [batch-id changes])
