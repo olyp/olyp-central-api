@@ -396,14 +396,17 @@
      :db/ident :auto-increment-bigint
      :db/doc "MySQL style, baby"
      :db/fn #db/fn {:lang "clojure"
-                    :params [db attr eids]
-                    :code (let [current (or (d/q '[:find (max ?val) .
-                                                   :in $ ?attr
-                                                   :where [_ ?attr ?val]]
-                                                 db
-                                                 attr)
-                                            java.math.BigInteger/ONE)]
-                            (map-indexed
-                             (fn [idx eid]
-                               [:db/add eid attr (.add (java.math.BigInteger/valueOf idx) (.add current java.math.BigInteger/ONE))])
-                             eids))}}]]}}
+                    :params [db attrs]
+                    :code (mapcat
+                           (fn [[attr eids]]
+                             (let [current (or (d/q '[:find (max ?val) .
+                                                      :in $ ?attr
+                                                      :where [_ ?attr ?val]]
+                                                    db
+                                                    attr)
+                                               java.math.BigInteger/ONE)]
+                               (map-indexed
+                                (fn [idx eid]
+                                  [:db/add eid attr (.add (java.math.BigInteger/valueOf idx) (.add current java.math.BigInteger/ONE))])
+                                eids)))
+                           attrs)}}]]}}

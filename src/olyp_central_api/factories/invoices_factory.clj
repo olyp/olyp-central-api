@@ -104,7 +104,7 @@
                   [[:db/add batch-tempid :invoice-batch/public-id (str (d/squuid))]
                    [:db/add batch-tempid :invoice-batch/month (str year "-" month)]
                    [:db/add batch-tempid :invoice-batch/finalized false]
-                   [:auto-increment-bigint :invoice/invoice-number (map :invoice-tempid invoices-data)]]
+                   [:auto-increment-bigint {:invoice/invoice-number (map :invoice-tempid invoices-data)}]]
                   (mapcat
                    (fn [{:keys [invoice-tempid invoice-data]}]
                      (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
