@@ -90,41 +90,43 @@
          (remove #(and (empty? (:bookings %)) (empty? (:rentals %))))
          (map #(get-customer-invoice db %)))))
 
-(defn create-invoice-batch-for-month [year month datomic-conn]
-  (let [db (d/db datomic-conn)
-        invoices-data (map
+(defn facts-for-create-invoice-batch-for-month [year month batch-tempid db]
+  (let [invoices-data (map
                        (fn [invoice]
                          {:invoice-tempid (d/tempid :db.part/user)
                           :invoice-data invoice})
-                       (prepare-invoices-for-month year month db))
+                       (prepare-invoices-for-month year month db))]
+    (concat
+     [[:db/add batch-tempid :invoice-batch/public-id (str (d/squuid))]
+      [:db/add batch-tempid :invoice-batch/month (str year "-" month)]
+      [:db/add batch-tempid :invoice-batch/finalized false]
+      [:auto-increment-bigint {:invoice/invoice-number (map :invoice-tempid invoices-data)}]]
+     (mapcat
+      (fn [{:keys [invoice-tempid invoice-data]}]
+        (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
+          (concat
+           [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
+            [:db/add invoice-tempid :invoice/key invoice-key]
+            [:db/add invoice-tempid :invoice/month (str year "-" month)]
+            [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
+           (apply
+            concat
+            (map-indexed
+             (fn [idx line]
+               (let [line-tempid (d/tempid :db.part/user)]
+                 [[:db/add line-tempid :invoice-line/invoice-key invoice-key]
+                  [:db/add line-tempid :invoice-line/sort-order idx]
+                  [:db/add line-tempid :invoice-line/quantity (:quantity line)]
+                  [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
+                  [:db/add line-tempid :invoice-line/tax (:tax line)]
+                  [:db/add line-tempid :invoice-line/product-code (:product-code line)]
+                  [:db/add line-tempid :invoice-line/description (:description line)]]))
+             (:lines invoice-data))))))
+      invoices-data))))
+
+(defn create-invoice-batch-for-month [year month datomic-conn]
+  (let [db (d/db datomic-conn)
         batch-tempid (d/tempid :db.part/user)
-        tx-res @(d/transact
-                 datomic-conn
-                 (concat
-                  [[:db/add batch-tempid :invoice-batch/public-id (str (d/squuid))]
-                   [:db/add batch-tempid :invoice-batch/month (str year "-" month)]
-                   [:db/add batch-tempid :invoice-batch/finalized false]
-                   [:auto-increment-bigint {:invoice/invoice-number (map :invoice-tempid invoices-data)}]]
-                  (mapcat
-                   (fn [{:keys [invoice-tempid invoice-data]}]
-                     (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
-                       (concat
-                        [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
-                         [:db/add invoice-tempid :invoice/key invoice-key]
-                         [:db/add invoice-tempid :invoice/month (str year "-" month)]
-                         [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
-                        (apply
-                         concat
-                         (map-indexed
-                          (fn [idx line]
-                            (let [line-tempid (d/tempid :db.part/user)]
-                              [[:db/add line-tempid :invoice-line/invoice-key invoice-key]
-                               [:db/add line-tempid :invoice-line/sort-order idx]
-                               [:db/add line-tempid :invoice-line/quantity (:quantity line)]
-                               [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
-                               [:db/add line-tempid :invoice-line/tax (:tax line)]
-                               [:db/add line-tempid :invoice-line/product-code (:product-code line)]
-                               [:db/add line-tempid :invoice-line/description (:description line)]]))
-                          (:lines invoice-data))))))
-                   invoices-data)))]
+        tx-res @(d/transact datomic-conn
+                            (facts-for-create-invoice-batch-for-month year month batch-tempid db))]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) batch-tempid))))
