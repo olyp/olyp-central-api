@@ -5,6 +5,7 @@
            [java.math BigDecimal BigInteger]))
 
 (def product-code-rentable-room "1")
+(def product-code-rental-agreement "2")
 (def big-decimal-minus-one (BigDecimal. "-1"))
 (def big-decimal-sixty (BigDecimal. "60"))
 
@@ -24,10 +25,20 @@
         end-of-month
         (:db/id customer))))
 
+(defn find-rental-agreements-for-customer [db customer]
+  (map
+   #(d/entity db %)
+   (d/q '[:find [?e ...]
+          :in $ ?customer
+          :where
+          [?e :customer-room-rental-agreement/customer ?customer]]
+        db
+        (:db/id customer))))
+
 (defn get-customer-invoice-base-data [db customer end-of-month]
   {:customer customer
    :bookings (find-bookings-for-customer db end-of-month customer)
-   :rentals []})
+   :rental-agreements (find-rental-agreements-for-customer db customer)})
 
 (defn get-booking-total-minutes [booking]
   (let [reservation (-> booking :room-reservation/_ref first)]
@@ -67,7 +78,14 @@
         :description (str (:user/name user) ", " (:reservable-room/name room) ": " total-hours)}))
    (group-by :room-booking/user room-bookings)))
 
-(defn get-customer-invoice [db {:keys [bookings rentals customer]}]
+(defn get-rental-agreement-lines [rental-agreement]
+  [{:quantity BigDecimal/ONE
+    :unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)
+    :tax (-> rental-agreement :customer-room-rental-agreement/customer :customer/room-rental-tax)
+    :product-code product-code-rental-agreement
+    :description (str "Rental of " (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))}])
+
+(defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   {:customer customer
    :lines
    (concat
@@ -79,7 +97,10 @@
                                          (first))
              lines (get-room-invoice-lines room room-booking-agreement room-bookings)]
          (concat lines (get-free-hours-lines room-booking-agreement customer lines))))
-     (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) bookings)))})
+     (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) bookings))
+    (mapcat
+     get-rental-agreement-lines
+     rental-agreements))})
 
 (defn prepare-invoices-for-month [year month db]
   (let [end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
