@@ -71,14 +71,12 @@
 
 (defn get-free-hours-lines [room-booking-agreement customer booking-lines]
   (let [free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))]
-    (if (= 0 (.compareTo free-hours BigDecimal/ZERO))
-      []
+    (when (not= 0 (.compareTo free-hours BigDecimal/ZERO))
       (let [actual-hours (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map :quantity booking-lines))
             line-hours (if (= 1 (.compareTo actual-hours free-hours))
                          free-hours
                          actual-hours)]
-        (if (= 0 (.compareTo line-hours BigDecimal/ZERO))
-          []
+        (when (not= 0 (.compareTo line-hours BigDecimal/ZERO))
           [(get-free-hours-line line-hours room-booking-agreement customer)])))))
 
 (defn get-room-booking-invoice-lines [room-booking-agreement room-bookings]
