@@ -70,15 +70,16 @@
 (defn get-customer-invoice [db {:keys [bookings rentals customer]}]
   {:customer customer
    :lines
-   (mapcat
-    (fn [[room room-bookings]]
-      (let [room-booking-agreement (->> customer
-                                        :customer-room-booking-agreement/_customer
-                                        (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
-                                        (first))
-            lines (get-room-invoice-lines room room-booking-agreement room-bookings)]
-        (concat lines (get-free-hours-lines room-booking-agreement customer lines))))
-    (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) bookings))})
+   (concat
+    (mapcat
+     (fn [[room room-bookings]]
+       (let [room-booking-agreement (->> customer
+                                         :customer-room-booking-agreement/_customer
+                                         (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
+                                         (first))
+             lines (get-room-invoice-lines room room-booking-agreement room-bookings)]
+         (concat lines (get-free-hours-lines room-booking-agreement customer lines))))
+     (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room) bookings)))})
 
 (defn prepare-invoices-for-month [year month db]
   (let [end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
