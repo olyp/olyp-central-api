@@ -158,7 +158,6 @@
         (is (= "2015-1" (:invoice-batch/month batch)))
         (is (= 1 (count (:invoice-batch/invoices batch))))
         (let [invoice (first (:invoice-batch/invoices batch))]
-          (prn (d/touch invoice))
           (is (= "2015-1" (:invoice/month invoice)))
           (let [invoice-lines (->>
                                (d/q '[:find [?e ...] :in $ ?key :where [?e :invoice-line/invoice-key ?key]]
