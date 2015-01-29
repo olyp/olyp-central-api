@@ -55,12 +55,13 @@
                              big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)]
-    [{:quantity actual-hours
-       :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
-       :tax (:customer-room-booking-agreement/tax room-booking-agreement)
-       :product-code product-code-rentable-room
-       :description (str (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
-                         ": " actual-hours)}]))
+    (if  (not= 0 (.compareTo actual-hours BigDecimal/ZERO))
+      [{:quantity actual-hours
+        :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+        :tax (:customer-room-booking-agreement/tax room-booking-agreement)
+        :product-code product-code-rentable-room
+        :description (str (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
+                          ": " actual-hours)}])))
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   {:customer customer

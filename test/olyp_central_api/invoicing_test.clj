@@ -172,4 +172,27 @@
             (is (= (BigDecimal. "1") (-> invoice-lines (nth 1) :invoice-line/quantity)))
             (is (= 0 (-> invoice-lines (nth 1) :invoice-line/tax)))))))))
 
-;; TODO: Husk å teste at dersom du ikke har brukt opp gratistimene får du ikke linje for antall gratis timer på fakturaen
+(deftest not-creating-line-when-not-exceeding-free-hours
+  (with-datomic-conn datomic-conn
+    (let [reservable-room (create-reservable-room datomic-conn "Rom 5")
+          rentable-room-1 (create-rentable-room datomic-conn "Rom 1")
+          user-quentin (create-user datomic-conn
+                                    "quentin@test.com" "Quentin Test" "test"
+                                    "375.00000" 8)]
+
+      (create-bookings
+       reservable-room user-quentin datomic-conn
+       (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00))
+
+      (create-room-rental rentable-room-1 user-quentin datomic-conn "7800.00000" 25)
+
+      (let [invoice-list (invoices-factory/prepare-invoices-for-month 2015 1 (d/db datomic-conn))
+            invoices (zipmap (map #(-> % :customer :customer/public-id) invoice-list)
+                             invoice-list)]
+        (is (contains? invoices (-> user-quentin :user/customer :customer/public-id)))
+
+        (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
+          (is (= (count (:lines quentin-invoice)) 1))
+          (is (= (-> quentin-invoice :lines (nth 0) :unit-price) (BigDecimal. "7800.00000")))
+          (is (= (-> quentin-invoice :lines (nth 0) :quantity) (BigDecimal. "1")))
+          (is (= (-> quentin-invoice :lines (nth 0) :tax) 25)))))))
