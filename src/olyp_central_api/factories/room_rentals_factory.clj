@@ -9,11 +9,11 @@
    (v/presence-of "tax")
    (v/numericality-of "tax" :only-integer true :gte 0 :lte 100)])
 
-(defn assign-room [user data datomic-conn]
+(defn assign-room [customer data datomic-conn]
   (let [tempid (d/tempid :db.part/user)
         tx-res @(d/transact
                  datomic-conn
-                 [[:db/add tempid :customer-room-rental-agreement/customer (-> user :user/customer :db/id)]
+                 [[:db/add tempid :customer-room-rental-agreement/customer (:db/id customer)]
                   [:db/add tempid :customer-room-rental-agreement/rentable-room [:rentable-room/public-id (data "rentable_room")]]
                   [:db/add tempid :customer-room-rental-agreement/monthly-price (BigDecimal. (data "monthly_price"))]
                   [:db/add tempid :customer-room-rental-agreement/tax (data "tax")]])]

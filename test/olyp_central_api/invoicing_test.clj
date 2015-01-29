@@ -54,7 +54,7 @@
 
 (defn create-room-rental [rentable-room user datomic-conn monthly-price tax]
   (room-rentals-factory/assign-room
-   user
+   (:user/customer user)
    {"monthly_price" monthly-price
     "tax" tax
     "rentable_room" (:rentable-room/public-id rentable-room)}
