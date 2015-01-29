@@ -46,7 +46,7 @@
      :unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)
      :tax (:customer-room-rental-agreement/tax rental-agreement)
      :product-code product-code-rental-agreement
-     :description (str "Rental of "
+     :description (str "Månedlig leie av "
                        (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))}])
 
 (defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
@@ -60,8 +60,8 @@
         :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         :tax (:customer-room-booking-agreement/tax room-booking-agreement)
         :product-code product-code-rentable-room
-        :description (str (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
-                          ": " actual-hours)}])))
+        :description (str "Fakturerbar timesleie i "
+                          (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name))}])))
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   {:customer customer
