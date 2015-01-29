@@ -41,26 +41,26 @@
                                 (DateTime. (:room-reservation/to reservation)))
         (.getMinutes))))
 
-(defn get-rental-agreement-invoice-line [rental-agreement]
-  {:quantity BigDecimal/ONE
-   :unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)
-   :tax (:customer-room-rental-agreement/tax rental-agreement)
-   :product-code product-code-rental-agreement
-   :description (str "Rental of "
-                     (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))})
+(defn get-rental-agreement-invoice-lines [rental-agreement]
+  [{:quantity BigDecimal/ONE
+     :unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)
+     :tax (:customer-room-rental-agreement/tax rental-agreement)
+     :product-code product-code-rental-agreement
+     :description (str "Rental of "
+                       (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))}])
 
-(defn get-room-booking-invoice-line [room-bookings room-booking-agreement]
+(defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
   (let [total-minutes (reduce + (map get-booking-total-minutes room-bookings))
         total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
                              big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)]
-    {:quantity actual-hours
-     :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
-     :tax (:customer-room-booking-agreement/tax room-booking-agreement)
-     :product-code product-code-rentable-room
-     :description (str (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
-                       ": " total-hours)}))
+    [{:quantity actual-hours
+       :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+       :tax (:customer-room-booking-agreement/tax room-booking-agreement)
+       :product-code product-code-rentable-room
+       :description (str (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
+                         ": " actual-hours)}]))
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   {:customer customer
@@ -68,14 +68,14 @@
    (concat
     (->> bookings
          (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room))
-         (map (fn [[room room-bookings]]
-                (get-room-booking-invoice-line
-                 room-bookings
-                 (->> customer
-                      :customer-room-booking-agreement/_customer
-                      (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
-                      (first))))))
-    (map get-rental-agreement-invoice-line rental-agreements))})
+         (mapcat (fn [[room room-bookings]]
+                   (get-room-booking-invoice-lines
+                    room-bookings
+                    (->> customer
+                         :customer-room-booking-agreement/_customer
+                         (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
+                         (first))))))
+    (mapcat get-rental-agreement-invoice-lines rental-agreements))})
 
 (defn prepare-invoices-for-month [year month db]
   (let [end-of-month (-> (DateTime. year month 1 0 0 (DateTimeZone/forID "Europe/Oslo"))
