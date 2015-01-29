@@ -59,7 +59,9 @@
      :unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
      :tax (:customer-room-booking-agreement/tax room-booking-agreement)
      :product-code product-code-rentable-room
-     :description (str (:user/name user) ", " (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name) ": " total-hours)}))
+     :description (str (:user/name user)
+                       ", " (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name)
+                       ": " total-hours)}))
 
 (defn get-rental-agreement-invoice-line [rental-agreement]
   {:quantity BigDecimal/ONE
