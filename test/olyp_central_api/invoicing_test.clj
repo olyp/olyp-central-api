@@ -112,19 +112,16 @@
         (is (not (contains? invoices (-> user-edvard :user/customer :customer/public-id))))
 
         (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
-          (is (= (count (:lines quentin-invoice)) 4))
+          (is (= (count (:lines quentin-invoice)) 3))
           (is (= (-> quentin-invoice :lines (nth 0) :unit-price) (BigDecimal. "375.00000")))
-          (is (= (-> quentin-invoice :lines (nth 0) :quantity) (BigDecimal. "7")))
+          (is (= (-> quentin-invoice :lines (nth 0) :quantity) (BigDecimal. "3")))
           (is (= (-> quentin-invoice :lines (nth 0) :tax) 25))
-          (is (= (-> quentin-invoice :lines (nth 1) :unit-price) (BigDecimal. "-375.00000")))
-          (is (= (-> quentin-invoice :lines (nth 1) :quantity) (BigDecimal. "4")))
+          (is (= (-> quentin-invoice :lines (nth 1) :unit-price) (BigDecimal. "7800.00000")))
+          (is (= (-> quentin-invoice :lines (nth 1) :quantity) (BigDecimal. "1")))
           (is (= (-> quentin-invoice :lines (nth 1) :tax) 25))
-          (is (= (-> quentin-invoice :lines (nth 2) :unit-price) (BigDecimal. "7800.00000")))
+          (is (= (-> quentin-invoice :lines (nth 2) :unit-price) (BigDecimal. "12800.00000")))
           (is (= (-> quentin-invoice :lines (nth 2) :quantity) (BigDecimal. "1")))
-          (is (= (-> quentin-invoice :lines (nth 2) :tax) 25))
-          (is (= (-> quentin-invoice :lines (nth 3) :unit-price) (BigDecimal. "12800.00000")))
-          (is (= (-> quentin-invoice :lines (nth 3) :quantity) (BigDecimal. "1")))
-          (is (= (-> quentin-invoice :lines (nth 3) :tax) 0)))
+          (is (= (-> quentin-invoice :lines (nth 2) :tax) 0)))
 
         (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
           (is (= (count (:lines pavlov-invoice)) 2))
@@ -138,6 +135,7 @@
 (deftest creating-invoices-for-month
   (with-datomic-conn datomic-conn
     (let [reservable-room (create-reservable-room datomic-conn "Rom 5")
+          rentable-room-1 (create-rentable-room datomic-conn "Rom 1")
           user-quentin (create-user datomic-conn
                                     "quentin@test.com" "Quentin Test" "test"
                                     "375.00000" 4)]
@@ -145,6 +143,8 @@
        reservable-room user-quentin datomic-conn
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)
        (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00))
+
+      (create-room-rental rentable-room-1 user-quentin datomic-conn "7800.00000" 0)
 
       (is (= 0 (count (d/q '[:find [?e ...] :where [?e :invoice-batch/finalized false]] (d/db datomic-conn)))))
 
@@ -166,8 +166,10 @@
                                (sort-by :invoice-line/sort-order))]
             (is (= 2 (count invoice-lines)))
             (is (= (BigDecimal. "375.00000") (-> invoice-lines (nth 0) :invoice-line/unit-price)))
-            (is (= (BigDecimal. "7") (-> invoice-lines (nth 0) :invoice-line/quantity)))
+            (is (= (BigDecimal. "3") (-> invoice-lines (nth 0) :invoice-line/quantity)))
             (is (= 25 (-> invoice-lines (nth 0) :invoice-line/tax)))
-            (is (= (BigDecimal. "-375.00000") (-> invoice-lines (nth 1) :invoice-line/unit-price)))
-            (is (= (BigDecimal. "4") (-> invoice-lines (nth 1) :invoice-line/quantity)))
-            (is (= 25 (-> invoice-lines (nth 1) :invoice-line/tax)))))))))
+            (is (= (BigDecimal. "7800.0000") (-> invoice-lines (nth 1) :invoice-line/unit-price)))
+            (is (= (BigDecimal. "1") (-> invoice-lines (nth 1) :invoice-line/quantity)))
+            (is (= 0 (-> invoice-lines (nth 1) :invoice-line/tax)))))))))
+
+;; TODO: Husk å teste at dersom du ikke har brukt opp gratistimene får du ikke linje for antall gratis timer på fakturaen
