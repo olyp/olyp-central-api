@@ -37,13 +37,11 @@
      user
      datomic-conn)))
 
-(defn create-user [datomic-conn email name password booking-tax rental-tax hourly-price free-hours]
+(defn create-user [datomic-conn email name password hourly-price free-hours]
   (let [customer (customers-factory/create-person-customer
                   {"name" "Quentin Test"
                    "zip" "2080"
                    "city" "Eidsvoll"
-                   "room_booking_tax" booking-tax
-                   "room_rental_tax" rental-tax
                    "room_booking_hourly_price" hourly-price
                    "room_booking_free_hours" free-hours}
                   datomic-conn)]
@@ -54,10 +52,11 @@
       "password" password}
      datomic-conn)))
 
-(defn create-room-rental [rentable-room user datomic-conn monthly-price]
+(defn create-room-rental [rentable-room user datomic-conn monthly-price tax]
   (room-rentals-factory/assign-room
    user
    {"monthly_price" monthly-price
+    "tax" tax
     "rentable_room" (:rentable-room/public-id rentable-room)}
    datomic-conn))
 
@@ -77,13 +76,13 @@
           rentable-room-3 (create-rentable-room datomic-conn "Rom 3")
           user-quentin (create-user datomic-conn
                                     "quentin@test.com" "Quentin Test" "test"
-                                    25 0 "375.00000" 4)
+                                    "375.00000" 4)
           user-pavlov (create-user datomic-conn
                                    "pavlov@test.com" "I.P. Pavlova" "test"
-                                   0 25 "350.00000" 0)
+                                   "350.00000" 0)
           user-edvard (create-user datomic-conn
                                    "edvard@test.com" "Edvard Grieg Stokke" "test"
-                                   25 25 "375.00000" 0)]
+                                   "375.00000" 0)]
 
       (create-bookings
        reservable-room user-quentin datomic-conn
@@ -91,15 +90,15 @@
        (LocalDateTime. 2015 01, 31, 23, 00) (LocalDateTime. 2015 02, 01, 04, 00)
        (LocalDateTime. 2015 02, 10, 14, 00) (LocalDateTime. 2015 02, 10, 17, 00))
 
-      (create-room-rental rentable-room-1 user-quentin datomic-conn "7800.00000")
-      (create-room-rental rentable-room-2 user-quentin datomic-conn "12800.00000")
+      (create-room-rental rentable-room-1 user-quentin datomic-conn "7800.00000" 25)
+      (create-room-rental rentable-room-2 user-quentin datomic-conn "12800.00000" 0)
 
       (create-bookings
        reservable-room user-pavlov datomic-conn
        (LocalDateTime. 2014 12, 31, 9, 00) (LocalDateTime. 2014 12, 31, 15, 00)
        (LocalDateTime. 2015 01, 31, 18, 00) (LocalDateTime. 2015 01, 31, 22, 30))
 
-      (create-room-rental rentable-room-3 user-pavlov datomic-conn "11400.00000")
+      (create-room-rental rentable-room-3 user-pavlov datomic-conn "11400.00000" 25)
 
       (create-bookings
        reservable-room user-edvard datomic-conn
@@ -122,7 +121,7 @@
           (is (= (-> quentin-invoice :lines (nth 1) :tax) 25))
           (is (= (-> quentin-invoice :lines (nth 2) :unit-price) (BigDecimal. "7800.00000")))
           (is (= (-> quentin-invoice :lines (nth 2) :quantity) (BigDecimal. "1")))
-          (is (= (-> quentin-invoice :lines (nth 2) :tax) 0))
+          (is (= (-> quentin-invoice :lines (nth 2) :tax) 25))
           (is (= (-> quentin-invoice :lines (nth 3) :unit-price) (BigDecimal. "12800.00000")))
           (is (= (-> quentin-invoice :lines (nth 3) :quantity) (BigDecimal. "1")))
           (is (= (-> quentin-invoice :lines (nth 3) :tax) 0)))
@@ -131,7 +130,7 @@
           (is (= (count (:lines pavlov-invoice)) 2))
           (is (= (-> pavlov-invoice :lines (nth 0) :unit-price) (BigDecimal. "350.00000")))
           (is (= (-> pavlov-invoice :lines (nth 0) :quantity) (BigDecimal. "10.5")))
-          (is (= (-> pavlov-invoice :lines (nth 0) :tax) 0))
+          (is (= (-> pavlov-invoice :lines (nth 0) :tax) 25))
           (is (= (-> pavlov-invoice :lines (nth 1) :unit-price) (BigDecimal. "11400.00000")))
           (is (= (-> pavlov-invoice :lines (nth 1) :quantity) (BigDecimal. "1")))
           (is (= (-> pavlov-invoice :lines (nth 1) :tax) 25)))))))
@@ -141,7 +140,7 @@
     (let [reservable-room (create-reservable-room datomic-conn "Rom 5")
           user-quentin (create-user datomic-conn
                                     "quentin@test.com" "Quentin Test" "test"
-                                    25 25 "375.00000" 4)]
+                                    "375.00000" 4)]
       (create-bookings
        reservable-room user-quentin datomic-conn
        (LocalDateTime. 2015 01, 14, 16, 00) (LocalDateTime. 2015 01, 14, 18, 00)

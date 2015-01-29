@@ -256,21 +256,6 @@
 
 
     {:db/id #db/id[:db.part/db]
-     :db/ident :customer/room-booking-tax
-     :db/valueType :db.type/long
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :customer/room-rental-tax
-     :db/valueType :db.type/long
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-
-
-
-    {:db/id #db/id[:db.part/db]
      :db/ident :rentable-room/public-id
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
@@ -305,6 +290,12 @@
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
 
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-rental-agreement/tax
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
 
 
 
@@ -328,6 +319,12 @@
 
     {:db/id #db/id[:db.part/db]
      :db/ident :customer-room-booking-agreement/free-hours
+     :db/valueType :db.type/long
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-booking-agreement/tax
      :db/valueType :db.type/long
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}
