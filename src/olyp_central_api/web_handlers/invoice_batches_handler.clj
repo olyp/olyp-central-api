@@ -14,6 +14,7 @@
       {:customer (customers-handler/customer-ent-to-public-value (:invoice/customer invoice))
        :invoice_number (:invoice/invoice-number invoice)
        :sum (.toString (:invoice/sum invoice))
+       :text (:invoice/text invoice)
        :lines
        (map
         (fn [line]
