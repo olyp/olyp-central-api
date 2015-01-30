@@ -92,43 +92,65 @@
          (remove #(and (empty? (:bookings %)) (empty? (:rental-agreements %))))
          (map #(get-customer-invoice db %)))))
 
-(defn facts-for-create-invoice-batch-for-month [year month batch-tempid db]
-  (let [invoices-data (map
-                       (fn [invoice]
-                         {:invoice-tempid (d/tempid :db.part/user)
-                          :invoice-data invoice})
-                       (prepare-invoices-for-month year month db))]
+(defn get-invoices-data [year month db]
+  (map
+   (fn [invoice]
+     {:invoice-tempid (d/tempid :db.part/user)
+      :invoice-data invoice})
+   (prepare-invoices-for-month year month db)))
+
+(defn facts-for-invoice-batch [batch-tempid year month]
+  [[:db/add batch-tempid :invoice-batch/public-id (str (d/squuid))]
+   [:db/add batch-tempid :invoice-batch/month (str year "-" month)]
+   [:db/add batch-tempid :invoice-batch/finalized false]])
+
+(defn facts-for-invoice-data [year month batch-tempid invoice-tempid invoice-data]
+  (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
     (concat
-     [[:db/add batch-tempid :invoice-batch/public-id (str (d/squuid))]
-      [:db/add batch-tempid :invoice-batch/month (str year "-" month)]
-      [:db/add batch-tempid :invoice-batch/finalized false]
-      [:auto-increment-bigint {:invoice/invoice-number (map :invoice-tempid invoices-data)}]]
+     [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
+      [:db/add invoice-tempid :invoice/key invoice-key]
+      [:db/add invoice-tempid :invoice/month (str year "-" month)]
+      [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
+     (map
+      (fn [booking]
+        [:db/add invoice-tempid :invoice/bookings (:db/id booking)])
+      (:bookings invoice-data))
+     (apply
+      concat
+      (map-indexed
+       (fn [idx line]
+         (let [line-tempid (d/tempid :db.part/user)]
+           [[:db/add line-tempid :invoice-line/public-id (str (d/squuid))]
+            [:db/add line-tempid :invoice-line/invoice-key invoice-key]
+            [:db/add line-tempid :invoice-line/sort-order idx]
+            [:db/add line-tempid :invoice-line/quantity (:quantity line)]
+            [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
+            [:db/add line-tempid :invoice-line/tax (:tax line)]
+            [:db/add line-tempid :invoice-line/product-code (:product-code line)]
+            [:db/add line-tempid :invoice-line/description (:description line)]]))
+       (:lines invoice-data))))))
+
+(defn facts-for-create-initial-invoice-batch-for-month [first-invoice-number year month batch-tempid db]
+  (let [invoices-data (get-invoices-data year month db)]
+    (concat
+     (facts-for-invoice-batch batch-tempid year month)
+     (apply
+      concat
+      (->> invoices-data
+           (map-indexed
+            (fn [idx {:keys [invoice-tempid invoice-data]}]
+              (concat
+               [[:db/add invoice-tempid :invoice/invoice-number (BigInteger/valueOf (+ first-invoice-number idx))]]
+               (facts-for-invoice-data year month batch-tempid invoice-tempid invoice-data)))))))))
+
+(defn facts-for-create-invoice-batch-for-month [year month batch-tempid db]
+  (let [invoices-data (get-invoices-data year month db)]
+    (concat
+     (facts-for-invoice-batch batch-tempid year month)
+     [[:auto-increment-bigint {:invoice/invoice-number (map :invoice-tempid invoices-data)}]]
      (->> invoices-data
           (mapcat (fn [{:keys [invoice-tempid invoice-data]}]
-                    (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
-                      (concat
-                       [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
-                        [:db/add invoice-tempid :invoice/key invoice-key]
-                        [:db/add invoice-tempid :invoice/month (str year "-" month)]
-                        [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
-                       (map
-                        (fn [booking]
-                          [:db/add invoice-tempid :invoice/bookings (:db/id booking)])
-                        (:bookings invoice-data))
-                       (apply
-                        concat
-                        (map-indexed
-                         (fn [idx line]
-                           (let [line-tempid (d/tempid :db.part/user)]
-                             [[:db/add line-tempid :invoice-line/public-id (str (d/squuid))]
-                              [:db/add line-tempid :invoice-line/invoice-key invoice-key]
-                              [:db/add line-tempid :invoice-line/sort-order idx]
-                              [:db/add line-tempid :invoice-line/quantity (:quantity line)]
-                              [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
-                              [:db/add line-tempid :invoice-line/tax (:tax line)]
-                              [:db/add line-tempid :invoice-line/product-code (:product-code line)]
-                              [:db/add line-tempid :invoice-line/description (:description line)]]))
-                         (:lines invoice-data)))))))))))
+                    (facts-for-invoice-data year month batch-tempid invoice-tempid invoice-data)))))))
 
 (defn create-invoice-batch-for-month [year month datomic-conn]
   (let [db (d/db datomic-conn)
