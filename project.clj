@@ -14,7 +14,8 @@
                  [crypto-random "1.2.0"]
                  [joda-time/joda-time "2.6"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.2"]]
+                 [ch.qos.logback/logback-classic "1.1.2"]
+                 [org.clojure/tools.nrepl "0.2.7"]]
   :profiles {:dev {:source-paths ["dev"]
                    :main olyp-central-api.main-dev}
              :uberjar {:source-paths ["prod"]
