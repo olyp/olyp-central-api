@@ -113,18 +113,23 @@
 
         (let [quentin-invoice (get invoices (-> user-quentin :user/customer :customer/public-id))]
           (is (= (count (:lines quentin-invoice)) 3))
+          (is (= (BigDecimal. "21725.00000") (:sum quentin-invoice)))
           (is (= (-> quentin-invoice :lines (nth 0) :unit-price) (BigDecimal. "375.00000")))
+          (is (= (-> quentin-invoice :lines (nth 0) :sum) (BigDecimal. "1125.00000")))
           (is (= (-> quentin-invoice :lines (nth 0) :quantity) (BigDecimal. "3")))
           (is (= (-> quentin-invoice :lines (nth 0) :tax) 25))
           (is (= (-> quentin-invoice :lines (nth 1) :unit-price) (BigDecimal. "7800.00000")))
+          (is (= (-> quentin-invoice :lines (nth 1) :sum) (BigDecimal. "7800.00000")))
           (is (= (-> quentin-invoice :lines (nth 1) :quantity) (BigDecimal. "1")))
           (is (= (-> quentin-invoice :lines (nth 1) :tax) 25))
           (is (= (-> quentin-invoice :lines (nth 2) :unit-price) (BigDecimal. "12800.00000")))
+          (is (= (-> quentin-invoice :lines (nth 2) :sum) (BigDecimal. "12800.00000")))
           (is (= (-> quentin-invoice :lines (nth 2) :quantity) (BigDecimal. "1")))
           (is (= (-> quentin-invoice :lines (nth 2) :tax) 0)))
 
         (let [pavlov-invoice (get invoices (-> user-pavlov :user/customer :customer/public-id))]
           (is (= (count (:lines pavlov-invoice)) 2))
+          (is (= (BigDecimal. "15075.00000") (:sum pavlov-invoice)))
           (is (= (-> pavlov-invoice :lines (nth 0) :unit-price) (BigDecimal. "350.00000")))
           (is (= (-> pavlov-invoice :lines (nth 0) :quantity) (BigDecimal. "10.5")))
           (is (= (-> pavlov-invoice :lines (nth 0) :tax) 25))
@@ -158,6 +163,7 @@
         (is (= 1 (count (:invoice-batch/invoices batch))))
         (let [invoice (first (:invoice-batch/invoices batch))]
           (is (= "2015-1" (:invoice/month invoice)))
+          (is (= (BigDecimal. "8925.00000") (:invoice/sum invoice)))
           (is (= 2 (count (:invoice/bookings invoice))))
           (let [invoice-lines (->>
                                (d/q '[:find [?e ...] :in $ ?key :where [?e :invoice-line/invoice-key ?key]]
@@ -168,9 +174,11 @@
             (is (= 2 (count invoice-lines)))
             (is (= (BigDecimal. "375.00000") (-> invoice-lines (nth 0) :invoice-line/unit-price)))
             (is (= (BigDecimal. "3") (-> invoice-lines (nth 0) :invoice-line/quantity)))
+            (is (= (BigDecimal. "1125.00000") (-> invoice-lines (nth 0) :invoice-line/sum)))
             (is (= 25 (-> invoice-lines (nth 0) :invoice-line/tax)))
             (is (= (BigDecimal. "7800.0000") (-> invoice-lines (nth 1) :invoice-line/unit-price)))
             (is (= (BigDecimal. "1") (-> invoice-lines (nth 1) :invoice-line/quantity)))
+            (is (= (BigDecimal. "7800.00000") (-> invoice-lines (nth 1) :invoice-line/sum)))
             (is (= 0 (-> invoice-lines (nth 1) :invoice-line/tax)))))))))
 
 (deftest not-creating-line-when-not-exceeding-free-hours

@@ -13,11 +13,13 @@
     (fn [invoice]
       {:customer (customers-handler/customer-ent-to-public-value (:invoice/customer invoice))
        :invoice_number (:invoice/invoice-number invoice)
+       :sum (.toString (:invoice/sum invoice))
        :lines
        (map
         (fn [line]
           {:quantity (.toString (:invoice-line/quantity line))
            :unit_price (.toString (:invoice-line/unit-price line))
+           :sum (.toString (:invoice-line/sum line))
            :tax (:invoice-line/tax line)
            :product_code (:invoice-line/product-code line)
            :description (:invoice-line/description line)})
