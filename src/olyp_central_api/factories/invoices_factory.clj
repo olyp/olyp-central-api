@@ -5,8 +5,8 @@
            [org.joda.time.format ISODateTimeFormat]
            [java.math BigDecimal BigInteger]))
 
-(def product-code-rentable-room "1")
-(def product-code-rental-agreement "2")
+(def product-code-rental-agreement "1")
+(def product-code-rentable-room "2")
 (def big-decimal-minus-one (BigDecimal. "-1"))
 (def big-decimal-sixty (BigDecimal. "60"))
 
