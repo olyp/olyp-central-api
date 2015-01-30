@@ -13,6 +13,8 @@
     (fn [invoice]
       {:customer (customers-handler/customer-ent-to-public-value (:invoice/customer invoice))
        :invoice_number (:invoice/invoice-number invoice)
+       :invoice_date (:invoice/invoice-date invoice)
+       :due_date (:invoice/due-date invoice)
        :sum_without_tax (.toString (:invoice/sum-without-tax invoice))
        :sum_with_tax (.toString (:invoice/sum-with-tax invoice))
        :total_tax (.toString (:invoice/total-tax invoice))
