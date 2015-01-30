@@ -488,4 +488,30 @@
      :db/ident :invoice-line/sum
      :db/valueType :db.type/bigdec
      :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]]}
+
+ :olyp/invoicing-attrs-4
+ {:txes
+  [[{:db/id :invoice/sum
+     :db/ident :invoice/sum-without-tax}
+
+    {:db/id :invoice-line/sum
+     :db/ident :invoice-line/sum-without-tax}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/sum-with-tax
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice/total-tax
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :invoice-line/sum-with-tax
+     :db/valueType :db.type/bigdec
+     :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}]]}}

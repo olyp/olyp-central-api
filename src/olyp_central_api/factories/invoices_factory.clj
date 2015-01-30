@@ -43,11 +43,14 @@
 
 (defn get-rental-agreement-invoice-lines [rental-agreement]
   (let [quantity BigDecimal/ONE
-        unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)]
+        unit-price (:customer-room-rental-agreement/monthly-price rental-agreement)
+        tax (:customer-room-rental-agreement/tax rental-agreement)
+        sum-without-tax (.multiply unit-price quantity)]
     [{:quantity quantity
       :unit-price unit-price
-      :sum (.multiply unit-price quantity)
-      :tax (:customer-room-rental-agreement/tax rental-agreement)
+      :tax tax
+      :sum-without-tax sum-without-tax
+      :sum-with-tax (.multiply sum-without-tax (BigDecimal. (str "1." tax)))
       :product-code product-code-rental-agreement
       :description (str "Månedlig leie av "
                         (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))}]))
@@ -58,12 +61,15 @@
                              big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)
-        unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)]
+        unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+        tax (:customer-room-booking-agreement/tax room-booking-agreement)
+        sum-without-tax (.multiply unit-price actual-hours)]
     (if (not= 0 (.compareTo actual-hours BigDecimal/ZERO))
       [{:quantity actual-hours
         :unit-price unit-price
-        :sum (.multiply unit-price actual-hours)
-        :tax (:customer-room-booking-agreement/tax room-booking-agreement)
+        :tax tax
+        :sum-without-tax sum-without-tax
+        :sum-with-tax (.multiply sum-without-tax (BigDecimal. (str "1." tax)))
         :product-code product-code-rentable-room
         :description (str "Fakturerbar timesleie i "
                           (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name))}])))
@@ -82,10 +88,14 @@
    (mapcat get-rental-agreement-invoice-lines rental-agreements)))
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
-  (let [lines (get-customer-invoice-lines bookings rental-agreements customer)]
+  (let [lines (get-customer-invoice-lines bookings rental-agreements customer)
+        sum-without-tax (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map :sum-without-tax lines))
+        sum-with-tax (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map :sum-with-tax lines))]
     {:customer customer
      :bookings bookings
-     :sum (reduce (fn [^BigDecimal a ^BigDecimal b] (.add a b)) (map :sum lines))
+     :sum-without-tax sum-without-tax
+     :sum-with-tax sum-with-tax
+     :total-tax (.subtract sum-with-tax sum-without-tax)
      :lines lines}))
 
 (defn prepare-invoices-for-month [year month db]
@@ -119,7 +129,9 @@
      [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
       [:db/add invoice-tempid :invoice/key invoice-key]
       [:db/add invoice-tempid :invoice/month (str year "-" month)]
-      [:db/add invoice-tempid :invoice/sum (:sum invoice-data)]
+      [:db/add invoice-tempid :invoice/sum-without-tax (:sum-without-tax invoice-data)]
+      [:db/add invoice-tempid :invoice/total-tax (:total-tax invoice-data)]
+      [:db/add invoice-tempid :invoice/sum-with-tax (:sum-with-tax invoice-data)]
       [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
      (map
       (fn [booking]
@@ -135,7 +147,8 @@
             [:db/add line-tempid :invoice-line/sort-order idx]
             [:db/add line-tempid :invoice-line/quantity (:quantity line)]
             [:db/add line-tempid :invoice-line/unit-price (:unit-price line)]
-            [:db/add line-tempid :invoice-line/sum (:sum line)]
+            [:db/add line-tempid :invoice-line/sum-without-tax (:sum-without-tax line)]
+            [:db/add line-tempid :invoice-line/sum-with-tax (:sum-with-tax line)]
             [:db/add line-tempid :invoice-line/tax (:tax line)]
             [:db/add line-tempid :invoice-line/product-code (:product-code line)]
             [:db/add line-tempid :invoice-line/description (:description line)]]))
