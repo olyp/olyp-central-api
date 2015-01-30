@@ -65,6 +65,7 @@
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   {:customer customer
+   :bookings bookings
    :lines
    (concat
     (->> bookings
@@ -110,6 +111,10 @@
                         [:db/add invoice-tempid :invoice/key invoice-key]
                         [:db/add invoice-tempid :invoice/month (str year "-" month)]
                         [:db/add invoice-tempid :invoice/customer (-> invoice-data :customer :db/id)]]
+                       (map
+                        (fn [booking]
+                          [:db/add invoice-tempid :invoice/bookings (:db/id booking)])
+                        (:bookings invoice-data))
                        (apply
                         concat
                         (map-indexed

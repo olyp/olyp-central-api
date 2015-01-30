@@ -461,4 +461,11 @@
                                 (fn [idx eid]
                                   [:db/add eid attr (.add (java.math.BigInteger/valueOf idx) (.add current java.math.BigInteger/ONE))])
                                 eids)))
-                           attrs)}}]]}}
+                           attrs)}}]]}
+:olyp/invoicing-attrs-2
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :invoice/bookings
+     :db/valueType :db.type/ref
+     :db/cardinality :db.cardinality/many
+     :db.install/_attribute :db.part/db}]]}}

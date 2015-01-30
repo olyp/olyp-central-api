@@ -21,6 +21,7 @@
       (log/info (str "Running migrations"))
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs])
       (conformity/ensure-conforms datomic-conn {:olyp/setting-is-invoiced-attr {:txes [(migrations/setting-is-invoiced-attr datomic-conn)]}} [:olyp/setting-is-invoiced-attr])
+      (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-2])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))
