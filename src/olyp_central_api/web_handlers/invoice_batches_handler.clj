@@ -22,8 +22,8 @@
         (fn [line]
           {:quantity (.toString (:invoice-line/quantity line))
            :unit_price (.toString (:invoice-line/unit-price line))
-           :sum-without-tax (.toString (:invoice-line/sum-without-tax line))
-           :sum-with-tax (.toString (:invoice-line/sum-with-tax line))
+           :sum_without_tax (.toString (:invoice-line/sum-without-tax line))
+           :sum_with_tax (.toString (:invoice-line/sum-with-tax line))
            :tax (:invoice-line/tax line)
            :product_code (:invoice-line/product-code line)
            :description (:invoice-line/description line)})
