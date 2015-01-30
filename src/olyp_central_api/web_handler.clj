@@ -3,6 +3,7 @@
             [olyp-central-api.web-handlers.users-handler :as users-handler]
             [olyp-central-api.web-handlers.reservations-handler :as reservations-handler]
             [olyp-central-api.web-handlers.customers-handler :as customers-handler]
+            [olyp-central-api.web-handlers.invoice-batches-handler :as invoice-batches-handler]
             [datomic.api :as d]))
 
 (defn create-handler [database-comp]
@@ -25,7 +26,8 @@
                    "/company_customers" customers-handler/company-customers-collection-handler
                    "/person_customers" customers-handler/person-customers-collection-handler
                    "/company_customers/" {[:customer-id ""] {"" customers-handler/company-customer-handler}}
-                   "/person_customers/" {[:customer-id ""] {"" customers-handler/person-customer-handler}}}])]
+                   "/person_customers/" {[:customer-id ""] {"" customers-handler/person-customer-handler}}
+                   "/invoice_batches/" {[:batch-id ""] {"" invoice-batches-handler/invoice-batch-handler}}}])]
     (fn [req]
       (try
         (let [db (d/db datomic-conn)]
