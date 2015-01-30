@@ -77,6 +77,7 @@
 
 (defn get-customer-invoice-lines [bookings rental-agreements customer]
   (concat
+   (mapcat get-rental-agreement-invoice-lines rental-agreements)
    (->> bookings
         (group-by #(-> % :room-reservation/_ref first :room-reservation/reservable-room))
         (mapcat (fn [[room room-bookings]]
@@ -85,8 +86,7 @@
                    (->> customer
                         :customer-room-booking-agreement/_customer
                         (filter #(= (:customer-room-booking-agreement/reservable-room %) room))
-                        (first))))))
-   (mapcat get-rental-agreement-invoice-lines rental-agreements)))
+                        (first))))))))
 
 (defn get-customer-invoice [db {:keys [bookings rental-agreements customer]}]
   (let [lines (get-customer-invoice-lines bookings rental-agreements customer)
