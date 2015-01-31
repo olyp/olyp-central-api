@@ -528,4 +528,24 @@
      :db/ident :invoice/due-date
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}]]}}
+     :db.install/_attribute :db.part/db}]]}
+
+ :olyp/public-id-for-agreements
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-rental-agreement/public-id
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/value
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :customer-room-booking-agreement/public-id
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db/unique :db.unique/value
+     :db.install/_attribute :db.part/db}
+
+    {:db/id :invoice-line/public-id
+     :db/unique :db.unique/value
+     :db.alter/_attribute :db.part/db}]]}}

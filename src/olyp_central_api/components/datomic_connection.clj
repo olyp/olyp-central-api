@@ -25,6 +25,8 @@
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-3])
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-4])
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-5])
+      (conformity/ensure-conforms datomic-conn schema [:olyp/public-id-for-agreements])
+      (conformity/ensure-conforms datomic-conn {:olyp/setting-public-ids-for-agreements {:txes [(migrations/setting-public-ids-for-agreements datomic-conn)]}} [:olyp/setting-public-ids-for-agreements])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))
