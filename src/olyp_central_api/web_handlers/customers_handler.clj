@@ -6,6 +6,13 @@
             [cheshire.core]
             [liberator.core :refer [resource]]))
 
+(defn get-agreement [ent]
+  (let [agreements (:customer-room-booking-agreement/_customer ent)]
+    (if (not= 1 (count agreements))
+      (throw (IllegalStateException. (str "Could not find exactly one agreement in the database. Found " agreements))))
+
+    (first agreements)))
+
 (defn customer-ent-to-public-value [ent]
   {:id (str (:customer/public-id ent))
    :type (case (:customer/type ent)
@@ -16,6 +23,8 @@
    :address (:customer/address ent)
    :zip (:customer/zip ent)
    :city (:customer/city ent)
+   :room_booking_hourly_price (str (:customer-room-booking-agreement/hourly-price (get-agreement ent)))
+   :room_booking_free_hours (:customer-room-booking-agreement/free-hours (get-agreement ent))
    :contact_person_name (:customer/contact-person-name ent)
    :contact_person_email (:customer/contact-person-email ent)
    :contact_person_phone (:customer/contact-person-phone ent)
