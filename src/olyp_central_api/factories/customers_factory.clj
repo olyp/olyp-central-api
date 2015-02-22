@@ -76,7 +76,7 @@
       (room-booking-agreement-attrs data)))))
 
 (defn update-room-booking-agreement-facts [data customer]
-  (let [room-booking-agreement-eid (-> customer :customer-room-booking-agreement/_customer first)]
+  (let [room-booking-agreement-eid (-> customer :customer-room-booking-agreement/_customer first :db/id)]
     (map
      (fn [[attr val]]
        [:db/add room-booking-agreement-eid attr val])
