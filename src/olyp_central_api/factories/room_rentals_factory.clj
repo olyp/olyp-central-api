@@ -13,7 +13,8 @@
   (let [tempid (d/tempid :db.part/user)
         tx-res @(d/transact
                  datomic-conn
-                 [[:db/add tempid :customer-room-rental-agreement/customer (:db/id customer)]
+                 [[:db/add tempid :customer-room-rental-agreement/public-id (str (d/squuid))]
+                  [:db/add tempid :customer-room-rental-agreement/customer (:db/id customer)]
                   [:db/add tempid :customer-room-rental-agreement/rentable-room [:rentable-room/public-id (data "rentable_room")]]
                   [:db/add tempid :customer-room-rental-agreement/monthly-price (BigDecimal. (data "monthly_price"))]
                   [:db/add tempid :customer-room-rental-agreement/tax (data "tax")]])]
