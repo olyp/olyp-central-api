@@ -59,11 +59,17 @@
 (defn round-minutes-down [minutes round-by]
   (- minutes (mod minutes round-by)))
 
+(defn bigdec-divide [^BigDecimal a ^BigDecimal b]
+  (try
+    (.divide a b)
+    (catch ArithmeticException e
+      (throw (RuntimeException. (str "Unable to divide " a " with " b), e)))))
+
 (defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
   (let [total-minutes (reduce + (map get-booking-total-minutes room-bookings))
         total-minutes-rounded (round-minutes-down total-minutes 30)
-        total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes-rounded)))
-                             big-decimal-sixty)
+        total-hours (bigdec-divide (BigDecimal. (BigInteger. (str total-minutes-rounded)))
+                                   big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)
         unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
