@@ -56,8 +56,12 @@
       :description (str "Månedlig leie av "
                         (-> rental-agreement :customer-room-rental-agreement/rentable-room :rentable-room/name))}]))
 
+(defn round-minutes-down [minutes round-by]
+  (- minutes (mod minutes round-by)))
+
 (defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
   (let [total-minutes (reduce + (map get-booking-total-minutes room-bookings))
+        total-minutes-rounded (round-minutes-down total-minutes 30)
         total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
                              big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
@@ -67,6 +71,8 @@
         sum-without-tax (.multiply unit-price actual-hours)]
     (if (not= 0 (.compareTo actual-hours BigDecimal/ZERO))
       [{:quantity actual-hours
+        :total-minutes total-minutes
+        :total-minutes-rounded total-minutes-rounded
         :unit-price unit-price
         :tax tax
         :sum-without-tax sum-without-tax
