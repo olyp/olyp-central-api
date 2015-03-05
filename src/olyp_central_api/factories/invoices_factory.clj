@@ -62,7 +62,7 @@
 (defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
   (let [total-minutes (reduce + (map get-booking-total-minutes room-bookings))
         total-minutes-rounded (round-minutes-down total-minutes 30)
-        total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes)))
+        total-hours (.divide (BigDecimal. (BigInteger. (str total-minutes-rounded)))
                              big-decimal-sixty)
         free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)
