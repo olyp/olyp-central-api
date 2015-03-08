@@ -143,3 +143,23 @@
      (-> (:olyp-reservation ctx)
          reservation-ent-to-public-value
          cheshire.core/generate-string))))
+
+(def recently-deleted-bookings-handler
+  (resource
+   :available-media-types ["application/json"]
+   :allowed-methods [:get]
+
+   :handle-ok
+   (fn [ctx]
+     (let [db (liberator-util/get-datomic-db ctx)]
+       (->>
+        (d/q
+         '[:find ?e ?tx
+           :where
+           [?e :room-reservation/public-id _ ?tx false]]
+         (d/history db))
+        (map (fn [[eid tx-eid]]
+               (reservation-ent-to-public-value
+                (d/entity (d/as-of db (dec (d/tx->t tx-eid))) eid))))
+        (take 20)
+        (cheshire.core/generate-string))))))
