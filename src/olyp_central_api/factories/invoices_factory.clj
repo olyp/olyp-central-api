@@ -140,6 +140,7 @@
   (let [invoice-key (str year "-" month "-" (-> invoice-data :customer :customer/public-id))]
     (concat
      [[:db/add batch-tempid :invoice-batch/invoices invoice-tempid]
+      [:db/add invoice-tempid :invoice/public-id (str (d/squuid))]
       [:db/add invoice-tempid :invoice/key invoice-key]
       [:db/add invoice-tempid :invoice/month (str year "-" month)]
       [:db/add invoice-tempid :invoice/invoice-date (.print (ISODateTimeFormat/date) now)]

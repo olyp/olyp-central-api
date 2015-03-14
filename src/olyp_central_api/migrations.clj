@@ -20,3 +20,10 @@
       (fn [eid]
         [:db/add eid :customer-room-booking-agreement/public-id (str (d/squuid))])
       (d/q '[:find [?e ...] :where [?e :customer-room-booking-agreement/customer]] db)))))
+
+(defn setting-public-ids-for-invoices [datomic-conn]
+  (let [db (d/db datomic-conn)]
+    (map
+     (fn [eid]
+       [:db/add eid :invoice/public-id (str (d/squuid))])
+     (d/q '[:find [?e ...] :where [?e :invoice/invoice-number]] db))))

@@ -548,4 +548,13 @@
 
     {:db/id :invoice-line/public-id
      :db/unique :db.unique/value
-     :db.alter/_attribute :db.part/db}]]}}
+     :db.alter/_attribute :db.part/db}]]}
+
+ :olyp/public-id-attr-for-invoices
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :invoice/public-id
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]]}}
