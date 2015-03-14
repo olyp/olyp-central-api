@@ -29,7 +29,8 @@
                    "/person_customers" customers-handler/person-customers-collection-handler
                    "/company_customers/" {[:customer-id ""] {"" customers-handler/company-customer-handler}}
                    "/person_customers/" {[:customer-id ""] {"" customers-handler/person-customer-handler}}
-                   "/invoice_batches/" {[:batch-id ""] {"" invoice-batches-handler/invoice-batch-handler}}
+                   "/invoice_batches" {"" invoice-batches-handler/invoice-batch-collection-handler
+                                       "/" {[:batch-id ""] {"" invoice-batches-handler/invoice-batch-handler}}}
                    "/rentable_rooms" rentable-rooms-handler/rentable-rooms-handler
                    "/customer_room_rental_agreements" customer-room-rental-agreements-handler/customer-room-rental-agreements-handler
                    "/recently_deleted_bookings" reservations-handler/recently-deleted-bookings-handler}])]
