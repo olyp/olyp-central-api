@@ -199,3 +199,25 @@
         tx-res @(d/transact datomic-conn
                             (facts-for-create-invoice-batch-for-month year month batch-tempid db))]
     (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) batch-tempid))))
+
+(defn get-all-entities-for-invoice-batch [batch-eid db]
+  (let [invoices (d/q '[:find [?invoice ...] :in $ ?batch :where [?batch :invoice-batch/invoices ?invoice]] db batch-eid)]
+    (concat
+     [batch-eid]
+     invoices
+     (mapcat
+      (fn [invoice]
+        (d/q '[:find [?invoice-line ...] :in $ ?invoice :where [?invoice :invoice/key ?invoice-key] [?invoice-line :invoice-line/invoice-key ?invoice-key]] db invoice))
+      invoices))))
+
+(defn delete-invoice-batch [batch-eid datomic-conn]
+  (let [db (d/db datomic-conn)]
+    (if (:invoice-batch/finalized (d/entity db batch-eid))
+      (throw (RuntimeException. "Unable to delete finalized invoice batch")))
+    @(d/transact
+      datomic-conn
+      (map
+       (fn [eid] [:db.fn/retractEntity eid])
+       (get-all-entities-for-invoice-batch batch-eid db)))))
+
+(defn finalize-invoice-batch [batch datomic-conn])
