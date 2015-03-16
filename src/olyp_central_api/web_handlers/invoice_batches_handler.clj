@@ -4,7 +4,8 @@
             [olyp-central-api.datomic-util :as datomic-util]
             [cheshire.core]
             [liberator.core :refer [resource]]
-            [olyp-central-api.web-handlers.customers-handler :as customers-handler]))
+            [olyp-central-api.web-handlers.customers-handler :as customers-handler]
+            [olyp-central-api.web-handlers.reservations-handler :as reservations-handler]))
 
 (defn batch-ent-to-public-value [batch]
   {:id (:invoice-batch/public-id batch)
@@ -39,7 +40,13 @@
             :description (:invoice-line/description line)})
          (->> (d/q '[:find [?e ...] :in $ ?key :where [?e :invoice-line/invoice-key ?key]] (d/entity-db batch) (:invoice/key invoice))
               (map #(d/entity (d/entity-db batch) %))
-              (sort-by :invoice-line/sort-order)))})
+              (sort-by :invoice-line/sort-order)))
+        :reservations
+        (map #(-> %
+                  :room-reservation/_ref
+                  first
+                  reservations-handler/reservation-ent-to-public-value)
+             (:invoice/bookings invoice))})
      (:invoice-batch/invoices batch))))
 
 (defn batch-exists? [ctx]
