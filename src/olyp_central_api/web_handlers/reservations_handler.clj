@@ -154,12 +154,15 @@
      (let [db (liberator-util/get-datomic-db ctx)]
        (->>
         (d/q
-         '[:find ?e ?tx
+         '[:find ?e ?tx-created ?tx-deleted
            :where
-           [?e :room-reservation/public-id _ ?tx false]]
+           [?e :room-reservation/public-id _ ?tx-created true]
+           [?e :room-reservation/public-id _ ?tx-deleted false]]
          (d/history db))
-        (map (fn [[eid tx-eid]]
-               (reservation-ent-to-public-value
-                (d/entity (d/as-of db (dec (d/tx->t tx-eid))) eid))))
+        (map (fn [[eid tx-created-eid tx-deleted-eid]]
+               {:reservation (reservation-ent-to-public-value
+                              (d/entity (d/as-of db (dec (d/tx->t tx-deleted-eid))) eid))
+                :created_at (.print (ISODateTimeFormat/dateTime) (DateTime. (:db/txInstant (d/entity (d/as-of db (d/tx->t tx-created-eid)) tx-created-eid))))
+                :deleted_at (.print (ISODateTimeFormat/dateTime) (DateTime. (:db/txInstant (d/entity (d/as-of db (d/tx->t tx-deleted-eid)) tx-deleted-eid))))}))
         (take 20)
         (cheshire.core/generate-string))))))
