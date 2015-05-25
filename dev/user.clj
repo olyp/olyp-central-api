@@ -1,26 +1,6 @@
 (ns user
-  (:require [com.stuartsierra.component :as component]
-            [clojure.tools.namespace.repl :refer (refresh)]
-            [olyp-central-api.app :as app]))
+  (:require [reloaded.repl :refer [system init start stop go reset]]
+            [olyp-central-api.dev-app :as dev-app]))
 
-(def system nil)
-
-(defn init []
-  (alter-var-root #'system
-    (constantly (app/create-system {:database {:type :datomic-mem}
-                                    :web {:port 3000}}))))
-
-(defn start []
-  (alter-var-root #'system component/start))
-
-(defn stop []
-  (alter-var-root #'system
-    (fn [s] (when s (component/stop s)))))
-
-(defn go []
-  (init)
-  (start))
-
-(defn reset []
-  (stop)
-  (refresh :after 'user/go))
+(reloaded.repl/set-init! #(dev-app/create-system {:database {:type :datomic :host "localhost" :port 4334 :db-name "olyp-central-api"}
+                                                  :web {:port 3000}}))

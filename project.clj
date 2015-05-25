@@ -14,11 +14,11 @@
                  [crypto-random "1.2.0"]
                  [joda-time/joda-time "2.6"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.2"]
-                 [org.clojure/tools.nrepl "0.2.7"]]
+                 [ch.qos.logback/logback-classic "1.1.2"]]
   :profiles {:dev {:source-paths ["dev"]
+                   :dependencies [[reloaded.repl "0.1.0"]]
                    :main olyp-central-api.main-dev}
              :uberjar {:source-paths ["prod"]
                        :main olyp-central-api.main-prod
-                       :aot [olyp-central-api.main-prod]}}
-  :plugins [[cider/cider-nrepl "0.7.0-SNAPSHOT"]])
+                       :aot [olyp-central-api.main-prod]
+                       :dependencies [[org.clojure/tools.nrepl "0.2.7"]]}})
