@@ -557,4 +557,14 @@
      :db/valueType :db.type/string
      :db/unique :db.unique/value
      :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]]}
+
+ :olyp/adding-comment-to-room-reservation
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/comment
+     :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}]]}}
+
+
