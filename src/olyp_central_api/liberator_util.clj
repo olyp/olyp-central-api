@@ -55,16 +55,19 @@
       :location {:line (.getLineNr location) :col (.getColumnNr location) :source-ref (str (.getSourceRef location))}
       :original-message original-message})))
 
-(defn processable-json? [{{:keys [body request-method]} :request}]
+(defn processable-json-without-method-check? [{{:keys [body]} :request}]
+  (try
+    (if (nil? body)
+      [false {:olyp-unprocessable-entity-msg "A HTTP body must be provided"}]
+      {:olyp-json (-> body slurp cheshire.core/parse-string)})
+    (catch JsonParseException e
+      [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}])
+    (catch Exception e
+      [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {"msg" (.toString e)})}])))
+
+(defn processable-json? [{{:keys [request-method]} :request :as ctx}]
   (if (contains? potentially-unprocessable-methods request-method)
-    (try
-      (if (nil? body)
-        [false {:olyp-unprocessable-entity-msg "A HTTP body must be provided"}]
-        {:olyp-json (-> body slurp cheshire.core/parse-string)})
-      (catch JsonParseException e
-        [false {:olyp-unprocessable-entity-msg (get-unprocessable-entity-msg e)}])
-      (catch Exception e
-        [false {:olyp-unprocessable-entity-msg (cheshire.core/generate-string {"msg" (.toString e)})}]))
+    (processable-json-without-method-check? ctx)
     true))
 
 (defn handle-unprocessable-entity [ctx]
