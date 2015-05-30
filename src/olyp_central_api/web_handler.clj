@@ -33,7 +33,11 @@
                                        "/" {[:batch-id ""] {"" invoice-batches-handler/invoice-batch-handler}}}
                    "/rentable_rooms" rentable-rooms-handler/rentable-rooms-handler
                    "/customer_room_rental_agreements" customer-room-rental-agreements-handler/customer-room-rental-agreements-handler
-                   "/recently_deleted_bookings" reservations-handler/recently-deleted-bookings-handler}])]
+                   "/recently_deleted_bookings" reservations-handler/recently-deleted-bookings-handler
+                   "/unbatched_bookings" reservations-handler/unbatched-bookings-handler
+                   "/hourly_booking_batches" reservations-handler/hourly-booking-batches-handler
+                   "/hourly_booking_batches/" {[:batch-id ""] {"" reservations-handler/batch-hourly-bookings-batch-handler
+                                                               "/hourly_bookings" reservations-handler/batch-hourly-bookings-collection-handler}}}])]
     (fn [req]
       (try
         (let [db (d/db datomic-conn)]

@@ -20,7 +20,6 @@
       (conformity/ensure-conforms datomic-conn schema [:olyp/main-schema])
       (log/info (str "Running migrations"))
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs])
-      (conformity/ensure-conforms datomic-conn {:olyp/setting-is-invoiced-attr {:txes [(migrations/setting-is-invoiced-attr datomic-conn)]}} [:olyp/setting-is-invoiced-attr])
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-2])
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-3])
       (conformity/ensure-conforms datomic-conn schema [:olyp/invoicing-attrs-4])
@@ -30,6 +29,7 @@
       (conformity/ensure-conforms datomic-conn schema [:olyp/public-id-attr-for-invoices])
       (conformity/ensure-conforms datomic-conn {:olyp/setting-public-ids-for-invoices {:txes [(migrations/setting-public-ids-for-invoices datomic-conn)]}} [:olyp/setting-public-ids-for-invoices])
       (conformity/ensure-conforms datomic-conn schema [:olyp/adding-comment-to-room-reservation])
+      (conformity/ensure-conforms datomic-conn schema [:olyp/adding-reservation-batches])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))

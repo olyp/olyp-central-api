@@ -28,6 +28,21 @@
    (v/presence-of "reservable_room_id")
    (v/all-keys-in #{"from" "to" "reservable_room_id"})))
 
+(def validate-reservation-batch
+  (v/validation-set
+   (v/presence-of "year")
+   (v/format-of "year" :format #"^\d{4}$" :message "must be four numbers")
+   (v/presence-of "month")
+   (v/format-of "month" :format #"^\d{2}$" :message "must be two numbers")
+   (v/all-keys-in #{"year" "month"})))
+
+(def validate-batch-hourly-bookings
+  (v/validation-set
+   (v/presence-of "hourly_booking_ids")
+   (v/validate-with-predicate "hourly_booking_ids" #(sequential? (% "hourly_booking_ids")) :message "Hourly bookings must be a list of hourly booking ids")
+   (v/validate-with-predicate "hourly_booking_ids" #(< 0 (count (% "hourly_booking_ids"))) :message "Hourly bookings cannot be an empty list")
+   (v/all-keys-in #{"hourly_booking_ids"})))
+
 (defn get-caused-exceptions-chain [^Exception e]
   (if (nil? e)
     nil
@@ -60,3 +75,27 @@
 
 (defn delete-booking [ent datomic-conn]
   @(d/transact datomic-conn [[:db.fn/retractEntity (:db/id ent)]]))
+
+(defn create-reservation-batch [data datomic-conn]
+  (let [tempid (d/tempid :db.part/user)
+        tx-res @(d/transact
+                 datomic-conn
+                 [[:db/add tempid :reservation-batch/public-id (str (d/squuid))]
+                  [:db/add tempid :reservation-batch/month (str (get data "year") "-" (get data "month"))]])]
+    (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) tempid))))
+
+(defn add-bookings-to-reservation-batch [data reservation-batch datomic-conn]
+  @(d/transact
+    datomic-conn
+    (map
+     (fn [hourly-booking-id]
+       [:db.fn/cas [:room-reservation/public-id hourly-booking-id] :room-reservation/reservation-batch nil (:db/id reservation-batch)])
+     (data "hourly_booking_ids"))))
+
+(defn unbatch-bookings [data reservation-batch datomic-conn]
+  @(d/transact
+    datomic-conn
+    (map
+     (fn [hourly-booking-id]
+       [:db/retract [:room-reservation/public-id hourly-booking-id] :room-reservation/reservation-batch (:db/id reservation-batch)])
+     (data "hourly_booking_ids"))))

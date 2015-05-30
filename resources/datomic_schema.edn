@@ -246,16 +246,6 @@
  :olyp/invoicing-attrs
  {:txes
   [[{:db/id #db/id[:db.part/db]
-     :db/ident :room-booking/is-invoiced
-     :db/valueType :db.type/boolean
-     :db/index true
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-
-
-
-    {:db/id #db/id[:db.part/db]
      :db/ident :rentable-room/public-id
      :db/valueType :db.type/string
      :db/cardinality :db.cardinality/one
@@ -327,35 +317,6 @@
      :db/ident :customer-room-booking-agreement/tax
      :db/valueType :db.type/long
      :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-
-
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :invoice-batch/public-id
-     :db/valueType :db.type/string
-     :db/unique :db.unique/value
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :invoice-batch/month
-     :db/valueType :db.type/string
-     :db/unique :db.unique/value
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :invoice-batch/finalized
-     :db/valueType :db.type/boolean
-     :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}
-
-    {:db/id #db/id[:db.part/db]
-     :db/ident :invoice-batch/invoices
-     :db/valueType :db.type/ref
-     :db/cardinality :db.cardinality/many
      :db.install/_attribute :db.part/db}
 
 
@@ -564,6 +525,28 @@
   [[{:db/id #db/id[:db.part/db]
      :db/ident :room-reservation/comment
      :db/valueType :db.type/string
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}]]}
+
+ :olyp/adding-reservation-batches
+ {:txes
+  [[{:db/id #db/id[:db.part/db]
+     :db/ident :reservation-batch/public-id
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :reservation-batch/month
+     :db/valueType :db.type/string
+     :db/unique :db.unique/value
+     :db/cardinality :db.cardinality/one
+     :db.install/_attribute :db.part/db}
+
+    {:db/id #db/id[:db.part/db]
+     :db/ident :room-reservation/reservation-batch
+     :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
      :db.install/_attribute :db.part/db}]]}}
 
