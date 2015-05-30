@@ -65,7 +65,7 @@
     (catch ArithmeticException e
       (throw (RuntimeException. (str "Unable to divide " a " with " b), e)))))
 
-(defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
+(defn get-room-booking-invoice-line [room-bookings room-booking-agreement]
   (let [total-minutes (reduce + (map get-booking-total-minutes room-bookings))
         total-minutes-rounded (round-minutes-down total-minutes 30)
         total-hours (bigdec-divide (BigDecimal. (BigInteger. (str total-minutes-rounded)))
@@ -74,18 +74,26 @@
         actual-hours (.max (.subtract total-hours free-hours) BigDecimal/ZERO)
         unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
         tax (:customer-room-booking-agreement/tax room-booking-agreement)
-        sum-without-tax (.multiply unit-price actual-hours)]
-    (if (not= 0 (.compareTo actual-hours BigDecimal/ZERO))
-      [{:quantity actual-hours
-        :total-minutes total-minutes
-        :total-minutes-rounded total-minutes-rounded
-        :unit-price unit-price
-        :tax tax
-        :sum-without-tax sum-without-tax
-        :sum-with-tax (.multiply sum-without-tax (BigDecimal. (str "1." tax)))
-        :product-code product-code-rentable-room
-        :description (str "Fakturerbar timesleie i "
-                          (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name))}])))
+        sum-without-tax (.multiply unit-price actual-hours)
+        base-sum-without-tax (.multiply unit-price total-hours)]
+    {:quantity actual-hours
+     :total-minutes total-minutes
+     :total-minutes-rounded total-minutes-rounded
+     :total-hours total-hours
+     :unit-price unit-price
+     :tax tax
+     :base-sum-without-tax base-sum-without-tax
+     :base-sum-with-tax (.multiply base-sum-without-tax (BigDecimal. (str "1." tax)))
+     :sum-without-tax sum-without-tax
+     :sum-with-tax (.multiply sum-without-tax (BigDecimal. (str "1." tax)))
+     :product-code product-code-rentable-room
+     :description (str "Fakturerbar timesleie i "
+                       (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/name))}))
+
+(defn get-room-booking-invoice-lines [room-bookings room-booking-agreement]
+  (let [line (get-room-booking-invoice-line room-bookings room-booking-agreement)]
+    (if (not= 0 (.compareTo (:quantlty line) BigDecimal/ZERO))
+      [line])))
 
 (defn get-customer-invoice-lines [bookings rental-agreements customer]
   (concat
