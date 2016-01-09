@@ -8,10 +8,10 @@
 
 (defn get-agreement [ent]
   (let [agreements (:customer-room-booking-agreement/_customer ent)]
-    (if (not= 1 (count agreements))
-      (throw (IllegalStateException. (str "Could not find exactly one agreement in the database. Found " agreements))))
-
-    (first agreements)))
+    (condp = (count agreements)
+      0 nil
+      1 (first agreements)
+      (throw (IllegalStateException. (str "Could not find exactly one agreement in the database. Found " agreements))))))
 
 (defn customer-ent-to-public-value [ent]
   {:id (str (:customer/public-id ent))
