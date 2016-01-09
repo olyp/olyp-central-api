@@ -33,8 +33,8 @@
 
   (start [component]
     (conformity/ensure-conforms
-     (get-in component [:dev-app :app :database :datomic-conn])
-     {:olyp/initial-seed-data {:txes [(generate-initial-seed-tx)]}} [:olyp/initial-seed-data])
+      (get-in component [:dev-app :app :database :datomic-conn])
+      {:olyp/initial-seed-data {:txes [(generate-initial-seed-tx)]}} [:olyp/initial-seed-data])
     component)
 
   (stop [component]
