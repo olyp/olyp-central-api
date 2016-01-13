@@ -19,7 +19,6 @@
    :to (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-reservation/to ent)))
    :booking (if-let [booking-ent (:room-reservation/ref ent)]
               {:id (str (:room-booking/public-id booking-ent))
-               :is_invoiced (:room-booking/is-invoiced booking-ent)
                :user (if-let [user-ent (:room-booking/user booking-ent)]
                        {:id (str (:user/public-id user-ent))
                         :email (:user/email user-ent)

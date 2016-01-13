@@ -61,8 +61,7 @@
                     [:set-room-reservation-range tempid [:reservable-room/public-id (data "reservable_room_id")] (data "from") (data "to")]
                     [:db/add tempid :room-reservation/ref ref-tempid]
                     [:db/add ref-tempid :room-booking/public-id (str (d/squuid))]
-                    [:db/add ref-tempid :room-booking/user (:db/id user)]
-                    [:db/add ref-tempid :room-booking/is-invoiced false]])]
+                    [:db/add ref-tempid :room-booking/user (:db/id user)]])]
       (d/entity (:db-after tx-res) (d/resolve-tempid (:db-after tx-res) (:tempids tx-res) tempid)))
     (catch Exception e
       (if-let [exception-info (->> (get-caused-exceptions-chain e)
