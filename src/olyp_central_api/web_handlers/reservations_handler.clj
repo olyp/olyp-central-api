@@ -17,6 +17,7 @@
   {:id (:room-reservation/public-id ent)
    :from (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-reservation/from ent)))
    :to (.print (ISODateTimeFormat/dateTime) (DateTime. (:room-reservation/to ent)))
+   :comment (:room-reservation/comment ent)
    :booking (if-let [booking-ent (:room-reservation/ref ent)]
               {:id (str (:room-booking/public-id booking-ent))
                :user (if-let [user-ent (:room-booking/user booking-ent)]

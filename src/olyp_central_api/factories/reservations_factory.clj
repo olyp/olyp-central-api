@@ -26,7 +26,7 @@
    (validate-type "to" Date)
    (v/validate-with-predicate "from" #(> 0 (compare (% "from") (% "to"))) :message "Can't create a booking that ends before it starts")
    (v/presence-of "reservable_room_id")
-   (v/all-keys-in #{"from" "to" "reservable_room_id"})))
+   (v/all-keys-in #{"from" "to" "comment" "reservable_room_id"})))
 
 (def validate-reservation-batch
   (v/validation-set
@@ -59,6 +59,7 @@
                    datomic-conn
                    [[:db/add tempid :room-reservation/public-id (str (d/squuid))]
                     [:set-room-reservation-range tempid [:reservable-room/public-id (data "reservable_room_id")] (data "from") (data "to")]
+                    [:db/add tempid :room-reservation/comment (data "comment")]
                     [:db/add tempid :room-reservation/ref ref-tempid]
                     [:db/add ref-tempid :room-booking/public-id (str (d/squuid))]
                     [:db/add ref-tempid :room-booking/user (:db/id user)]])]
