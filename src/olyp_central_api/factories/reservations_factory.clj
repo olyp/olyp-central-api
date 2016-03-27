@@ -59,7 +59,7 @@
                    datomic-conn
                    [[:db/add tempid :room-reservation/public-id (str (d/squuid))]
                     [:set-room-reservation-range tempid [:reservable-room/public-id (data "reservable_room_id")] (data "from") (data "to")]
-                    [:db/add tempid :room-reservation/comment (data "comment")]
+                    [:db/add tempid :room-reservation/comment (data "comment" "")]
                     [:db/add tempid :room-reservation/ref ref-tempid]
                     [:db/add ref-tempid :room-booking/public-id (str (d/squuid))]
                     [:db/add ref-tempid :room-booking/user (:db/id user)]])]
