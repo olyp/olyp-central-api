@@ -30,6 +30,7 @@
       (conformity/ensure-conforms datomic-conn {:olyp/setting-public-ids-for-invoices {:txes [(migrations/setting-public-ids-for-invoices datomic-conn)]}} [:olyp/setting-public-ids-for-invoices])
       (conformity/ensure-conforms datomic-conn schema [:olyp/adding-comment-to-room-reservation])
       (conformity/ensure-conforms datomic-conn schema [:olyp/adding-reservation-batches])
+      (conformity/ensure-conforms datomic-conn schema [:olyp/block-reservations-completely-wrapped-in-other-reservations])
       (assoc component
         :connection-uri connection-uri
         :datomic-conn datomic-conn)))

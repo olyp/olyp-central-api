@@ -548,6 +548,43 @@
      :db/ident :room-reservation/reservation-batch
      :db/valueType :db.type/ref
      :db/cardinality :db.cardinality/one
-     :db.install/_attribute :db.part/db}]]}}
+     :db.install/_attribute :db.part/db}]]}
+ :olyp/block-reservations-completely-wrapped-in-other-reservations
+ {:txes
+  [[{:db/id #db/id[:db.part/user]
+     :db/ident :assert-room-reservation-range
+     :db/doc ":db/add for from/to of a reservation"
+     :db/fn #db/fn {:lang "clojure"
+                    :params [db eid reservation-ref from to]
+                    :code (do
+                            (if (<= 0 (compare from to))
+                              (throw (Exception. "Cannot create a reservation that ends before it starts")))
+
+                            (if-let [conflict (datomic.api/q
+                                                '[:find ?room-reservation .
+                                                  :in $ ?from ?to ?reservable-room-e
+                                                  :where
+                                                  [?room-reservation :room-reservation/reservable-room ?reservable-room-e]
+                                                  [?room-reservation :room-reservation/from ?reservation-from]
+                                                  [?room-reservation :room-reservation/to ?reservation-to]
+                                                  [(> ?reservation-to ?from)]
+                                                  [(< ?reservation-from ?to)]]
+                                                db from to reservation-ref)]
+                              (let [conflicting-reservation (datomic.api/entity db conflict)]
+                                (throw (ex-info (str "This reservation conflicts with another reservation")
+                                         {:type :set-room-reservation-range
+                                          :conflicting-reservation-from (:room-reservation/from conflicting-reservation)
+                                          :conflicting-reservation-to (:room-reservation/to conflicting-reservation)}))))
+                            nil)}}
+
+    {:db/id #db/id[:db.part/user]
+     :db/ident :set-room-reservation-range
+     :db/doc ":db/add for from/to of a reservation"
+     :db/fn #db/fn {:lang "clojure"
+                    :params [db eid reservation-ref from to]
+                    :code [[:assert-room-reservation-range eid reservation-ref from to]
+                           [:db/add eid :room-reservation/from from]
+                           [:db/add eid :room-reservation/to to]
+                           [:db/add eid :room-reservation/reservable-room reservation-ref]]}}]]}}
 
 
