@@ -7,15 +7,14 @@
             [olyp-central-api.migrations :as migrations])
   (:import [java.util UUID]))
 
-(def schema (-> "datomic_schema.edn" io/resource slurp read-string))
-
 (defrecord Database [connection-uri]
   component/Lifecycle
 
   (start [component]
     (log/info (str "Connecting to Datomic on " connection-uri))
     (d/create-database connection-uri)
-    (let [datomic-conn (d/connect connection-uri)]
+    (let [datomic-conn (d/connect connection-uri)
+          schema (-> "datomic_schema.edn" io/resource slurp read-string)]
       (log/info (str "Ensuring Datomic conforms to schema"))
       (conformity/ensure-conforms datomic-conn schema [:olyp/main-schema])
       (log/info (str "Running migrations"))
