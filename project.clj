@@ -14,9 +14,13 @@
                  [crypto-random "1.2.0"]
                  [joda-time/joda-time "2.6"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [ch.qos.logback/logback-classic "1.1.2"]]
+                 [ch.qos.logback/logback-classic "1.1.2"]
+                 [com.novemberain/monger "3.1.0"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[reloaded.repl "0.1.0"]]}
+             :mongodb-migration {:source-paths ["dev"]
+                                 :main olyp-central-api.main-mongodb-migration
+                                 :dependencies [[reloaded.repl "0.1.0"]]}
              :uberjar {:source-paths ["prod"]
                        :main olyp-central-api.main-prod
                        :aot [olyp-central-api.main-prod]
