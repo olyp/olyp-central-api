@@ -1,8 +1,10 @@
 (ns olyp-central-api.main-mongodb-migration
   (:require [monger.core :as mg]
             [monger.collection :as mc]
-            [datomic.api :as d])
-  (:import (java.util Date)))
+            [datomic.api :as d]
+            [olyp-central-api.factories.invoices-factory :as invoices-factory])
+  (:import [java.util Date]
+           [java.math BigDecimal BigInteger]))
 
 (defn get-room-booking-agreements [customer]
   (let [agreement (:customer-room-booking-agreement/_customer customer)]
@@ -12,13 +14,66 @@
       "freeHours" (:customer-room-booking-agreement/free-hours agreement)
       "tax" true}]))
 
+(defn get-attr-tx-inst [id attr db]
+  (d/q '[:find ?tx-inst .
+         :in $ ?e ?a
+         :where
+         [?e ?a _ ?tx]
+         [?tx :db/txInstant ?tx-inst]] db id attr))
+
+(def big-decimal-negative-one (BigDecimal. "-1"))
+
+(defn get-single-room-booking-line [room-booking room-booking-agreement reservable-room]
+  (let [total-minutes (invoices-factory/get-booking-total-minutes room-booking)
+        total-minutes-rounded (invoices-factory/round-minutes-down total-minutes 30)
+        total-hours (invoices-factory/bigdec-divide
+                      (BigDecimal. (BigInteger. (str total-minutes-rounded)))
+                      invoices-factory/big-decimal-sixty)
+        unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+        sum-without-tax (.multiply unit-price total-hours)
+        tax (:customer-room-booking-agreement/tax room-booking-agreement)
+        tax-factor (BigDecimal. (str "1." tax))]
+      {"lineInfo" {"type" "roomBooking"
+                   "roomId" (:reservable-room/public-id reservable-room)
+                   "totalMinutes" total-minutes
+                   "totalMinutesRounded" total-minutes-rounded}
+       "note" (str "Booking, " (:reservable-room/name reservable-room) ", " total-hours " timer")
+       "tax" tax
+       "sumWithoutTax" (.toString sum-without-tax)
+       "sumWithTax" (.toString (.multiply sum-without-tax tax-factor))}))
+
+(defn get-hourly-booking-lines [customer reservations room-booking-agreement]
+  (let [reservable-room (:customer-room-booking-agreement/reservable-room room-booking-agreement)
+        room-bookings (map :room-reservation/ref reservations)
+        total-minutes (reduce + (map invoices-factory/get-booking-total-minutes room-bookings))
+        total-minutes-rounded (invoices-factory/round-minutes-down total-minutes 30)
+        total-hours (invoices-factory/bigdec-divide (BigDecimal. (BigInteger. (str total-minutes-rounded)))
+                                                    invoices-factory/big-decimal-sixty)
+        free-hours (BigDecimal. (:customer-room-booking-agreement/free-hours room-booking-agreement 0))
+        num-discounted-hours (.min free-hours total-hours)
+        unit-price (:customer-room-booking-agreement/hourly-price room-booking-agreement)
+        tax (:customer-room-booking-agreement/tax room-booking-agreement)
+        sum-without-tax (.multiply unit-price total-hours)
+        tax-factor (BigDecimal. (str "1." tax))
+        room-bookings-lines (map #(get-single-room-booking-line % room-booking-agreement reservable-room) room-bookings)]
+    (if (= (.compareTo num-discounted-hours BigDecimal/ZERO) 0)
+      room-bookings-lines
+      (let [free-hours-discount-without-tax (.multiply (.multiply unit-price num-discounted-hours) big-decimal-negative-one)]
+        (conj room-bookings-lines
+              {"lineInfo" {"type" "roomBookingRebate"
+                           "roomId" (:reservable-room/public-id reservable-room)
+                           "discountedHours" (.longValue (.doubleValue num-discounted-hours))}
+               "note" (str "Gratis timer, " (:reservable-room/name reservable-room))
+               "sumWithoutTax" (.toString free-hours-discount-without-tax)
+               "sumWithTax" (.toString (.multiply free-hours-discount-without-tax tax-factor))})))))
+
 (defn -main [& args]
   (let [mg-conn (mg/connect {:host (nth args 0) :port (Long/parseLong (nth args 1) 10)})
         mg-db (mg/get-db mg-conn (nth args 2))
         datomic-conn (d/connect (nth args 3))
         datomic-db (d/db datomic-conn)]
 
-    (doseq [coll ["users" "rooms" "customers" "reservations"]]
+    (doseq [coll ["users" "rooms" "customers" "reservations" "invoices"]]
       (mc/remove mg-db coll))
 
     (doseq [user (->> (d/q '[:find [?e ...] :where [?e :user/public-id]] datomic-db)
@@ -76,16 +131,56 @@
 
     (doseq [reservation (->> (d/q '[:find [?e ...] :where [?e :room-reservation/public-id]] datomic-db)
                          (map #(d/entity datomic-db %)))]
-      (let []
+      (let [customer (-> reservation :room-reservation/ref :room-booking/user :user/customer)
+            reservable-room (:room-reservation/reservable-room reservation)
+            room-booking-agreement-eid (d/q
+                                         '[:find ?e .
+                                           :in $ ?customer ?reservable-room
+                                           :where
+                                           [?e :customer-room-booking-agreement/customer ?customer]
+                                           [?e :customer-room-booking-agreement/reservable-room ?reservable-room]]
+                                         datomic-db
+                                         (:db/id customer)
+                                         (:db/id reservable-room))
+            room-booking-agreement (d/entity datomic-db room-booking-agreement-eid)]
         (mc/insert
           mg-db "reservations"
           {"_id" (:room-reservation/public-id reservation)
            "type" "booking"
            "booking" {"userId" (-> reservation :room-reservation/ref :room-booking/user :user/public-id)
-                      "customerId" (-> reservation :room-reservation/ref :room-booking/user :user/customer :customer/public-id)}
+                      "customerId" (:customer/public-id :customer)
+                      "hourlyPrice" (.toString (:customer-room-booking-agreement/hourly-price room-booking-agreement))
+                      "tax" (:customer-room-booking-agreement/tax room-booking-agreement)}
            "comment" (:room-reservation/comment reservation)
            "from" (:room-reservation/from reservation)
            "to" (:room-reservation/to reservation)
-           "roomId" (-> reservation :room-reservation/reservable-room :reservable-room/public-id)})))
+           "roomId" (:reservable-room/public-id reservable-room)})))
+
+
+    (doseq [reservation-batch (->> (d/q '[:find [?e ...] :where [?e :reservation-batch/public-id]] datomic-db)
+                                   (map #(d/entity datomic-db %)))]
+      (doseq [
+              [customer reservations]
+              (group-by #(-> % :room-reservation/ref :room-booking/user :user/customer)
+                        (->> (d/q '[:find [?e ...] :where [?e :room-reservation/reservation-batch ?batch-eid]] datomic-db (:db/id reservation-batch))
+                             (map #(d/entity datomic-db %))))]
+        (let [;; getting the first one is good enough - we only book for a single room currently
+              room-booking-agreement (->> customer
+                                          :customer-room-booking-agreement/_customer
+                                          (first))
+              hourly-booking-lines (get-hourly-booking-lines customer reservations room-booking-agreement)]
+
+          (mc/insert
+            mg-db "invoices"
+            {"createdAt" (get-attr-tx-inst (:db/id reservation-batch) :reservation-batch/public-id datomic-db)
+             "customerId" (:customer/public-id customer)
+             "hourlyBookingLines" [{"roomId" (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/public-id)
+                                    "roomBookingAgreementId" (:customer-room-booking-agreement/public-id room-booking-agreement)
+                                    "hourlyPrice" (.toString (:customer-room-booking-agreement/hourly-price room-booking-agreement))
+                                    "tax" (:customer-room-booking-agreement/tax room-booking-agreement)
+                                    "freeHours" (:customer-room-booking-agreement/free-hours room-booking-agreement)
+                                    "lines" hourly-booking-lines}]
+             "sumWithTax" (.toString (reduce #(.add %1 %2) (map #(BigDecimal. (get % "sumWithTax")) hourly-booking-lines)))
+             "sumWithoutTax" (.toString (reduce #(.add %1 %2) (map #(BigDecimal. (get % "sumWithoutTax")) hourly-booking-lines)))}))))
 
     (prn "Done!")))
