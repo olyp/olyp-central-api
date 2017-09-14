@@ -42,7 +42,7 @@
        "sumWithoutTax" (.toString sum-without-tax)
        "sumWithTax" (.toString (.multiply sum-without-tax tax-factor))}))
 
-(defn get-hourly-booking-lines [customer reservations room-booking-agreement]
+(defn get-hourly-booking-lines [reservations room-booking-agreement]
   (let [reservable-room (:customer-room-booking-agreement/reservable-room room-booking-agreement)
         room-bookings (map :room-reservation/ref reservations)
         total-minutes (reduce + (map invoices-factory/get-booking-total-minutes room-bookings))
@@ -168,7 +168,7 @@
               room-booking-agreement (->> customer
                                           :customer-room-booking-agreement/_customer
                                           (first))
-              hourly-booking-lines (get-hourly-booking-lines customer reservations room-booking-agreement)]
+              hourly-booking-lines (get-hourly-booking-lines reservations room-booking-agreement)]
 
           (mc/insert
             mg-db "invoices"
