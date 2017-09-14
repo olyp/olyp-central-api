@@ -162,7 +162,12 @@
       (doseq [
               [customer reservations]
               (group-by #(-> % :room-reservation/ref :room-booking/user :user/customer)
-                        (->> (d/q '[:find [?e ...] :where [?e :room-reservation/reservation-batch ?batch-eid]] datomic-db (:db/id reservation-batch))
+                        (->> (d/q '[:find [?e ...]
+                                    :in $ ?batch-eid
+                                    :where
+                                    [?e :room-reservation/reservation-batch ?batch-eid]]
+                                  datomic-db
+                                  (:db/id reservation-batch))
                              (map #(d/entity datomic-db %))))]
         (let [;; getting the first one is good enough - we only book for a single room currently
               room-booking-agreement (->> customer
