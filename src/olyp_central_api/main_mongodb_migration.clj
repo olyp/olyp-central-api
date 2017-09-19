@@ -155,7 +155,8 @@
            "comment" (:room-reservation/comment reservation)
            "from" (:room-reservation/from reservation)
            "to" (:room-reservation/to reservation)
-           "roomId" (:reservable-room/public-id reservable-room)})))
+           "roomId" (:reservable-room/public-id reservable-room)
+           "createdAt" (get-attr-tx-inst (:db/id reservation) :room-reservation/public-id datomic-db)})))
 
 
     (doseq [reservation-batch (->> (d/q '[:find [?e ...] :where [?e :reservation-batch/public-id]] datomic-db)
