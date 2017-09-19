@@ -148,7 +148,7 @@
           {"_id" (:room-reservation/public-id reservation)
            "type" "booking"
            "booking" {"userId" (-> reservation :room-reservation/ref :room-booking/user :user/public-id)
-                      "customerId" (:customer/public-id :customer)
+                      "customerId" (:customer/public-id customer)
                       "hourlyPrice" (.toString (:customer-room-booking-agreement/hourly-price room-booking-agreement))
                       "tax" (:customer-room-booking-agreement/tax room-booking-agreement)
                       "isInvoiced" (not (nil? (:room-reservation/reservation-batch reservation)))}
