@@ -7,10 +7,10 @@
            [java.math BigDecimal BigInteger]))
 
 (defn get-room-booking-agreements [customer]
-  (let [agreement (:customer-room-booking-agreement/_customer customer)]
+  (let [agreement (first (:customer-room-booking-agreement/_customer customer))]
     [{"type" "hourlyRental"
       "roomId" (-> agreement :customer-room-booking-agreement/reservable-room :reservable-room/public-id)
-      "hourlyPrice" (:customer-room-booking-agreement/hourly-price agreement)
+      "hourlyPrice" (.toString (:customer-room-booking-agreement/hourly-price agreement))
       "freeHours" (:customer-room-booking-agreement/free-hours agreement)
       "tax" true}]))
 
