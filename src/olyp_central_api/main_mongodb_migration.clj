@@ -8,7 +8,8 @@
 
 (defn get-room-booking-agreements [customer]
   (let [agreement (first (:customer-room-booking-agreement/_customer customer))]
-    [{"type" "hourlyRental"
+    [{"_id" (:customer-room-booking-agreement/public-id agreement)
+      "type" "hourlyRental"
       "roomId" (-> agreement :customer-room-booking-agreement/reservable-room :reservable-room/public-id)
       "hourlyPrice" (.toString (:customer-room-booking-agreement/hourly-price agreement))
       "freeHours" (:customer-room-booking-agreement/free-hours agreement)
@@ -65,6 +66,7 @@
                            "discountedHours" (.longValue (.doubleValue num-discounted-hours))}
                "note" (str "Gratis timer, " (:reservable-room/name reservable-room))
                "sumWithoutTax" (.toString free-hours-discount-without-tax)
+               "tax" tax
                "sumWithTax" (.toString (.multiply free-hours-discount-without-tax tax-factor))})))))
 
 (defn -main [& args]
@@ -72,6 +74,17 @@
         mg-db (mg/get-db mg-conn (nth args 2))
         datomic-conn (d/connect (nth args 3))
         datomic-db (d/db datomic-conn)]
+
+    (let [agreements-without-id
+          (->> (d/q '[:find [?e ...] :where [?e :customer-room-booking-agreement/reservable-room]] datomic-db)
+               (map (fn [eid] (d/entity datomic-db eid)))
+               (filter (fn [ent] (not (:customer-room-booking-agreement/public-id ent))))
+               (map :db/id))]
+      (when (> (count agreements-without-id) 0)
+        (prn "Creating missing room booking agreement IDs ")
+        @(d/transact datomic-conn (map (fn [eid] [:db/add eid :customer-room-booking-agreement/public-id (str (d/squuid))]) agreements-without-id))
+        (prn "Exiting, rerun pls")
+        (System/exit 1)))
 
     (doseq [coll ["users" "rooms" "customers" "reservations" "invoices"]]
       (mc/remove mg-db coll))
