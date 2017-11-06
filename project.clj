@@ -25,3 +25,9 @@
                        :main olyp-central-api.main-prod
                        :aot [olyp-central-api.main-prod]
                        :dependencies [[org.clojure/tools.nrepl "0.2.7"]]}})
+
+
+;; never do this
+(require 'cemerick.pomegranate.aether)
+(cemerick.pomegranate.aether/register-wagon-factory!
+ "http" #(org.apache.maven.wagon.providers.http.HttpWagon.))
