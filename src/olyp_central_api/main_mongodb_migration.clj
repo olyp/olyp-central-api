@@ -192,7 +192,7 @@
               hourly-booking-lines (get-hourly-booking-lines reservations room-booking-agreement)]
           (mc/insert
             mg-db "invoices"
-            {"_id" (d/squuid)
+            {"_id" (str (d/squuid))
              "createdAt" (get-attr-tx-inst (:db/id reservation-batch) :reservation-batch/public-id datomic-db)
              "customerId" (:customer/public-id customer)
              "hourlyBookingLines" [{"roomId" (-> room-booking-agreement :customer-room-booking-agreement/reservable-room :reservable-room/public-id)
