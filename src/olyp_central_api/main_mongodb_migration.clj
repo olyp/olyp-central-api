@@ -70,9 +70,10 @@
                "sumWithTax" (.toString (.multiply free-hours-discount-without-tax tax-factor))})))))
 
 (defn -main [& args]
-  (let [mg-conn (mg/connect {:host (nth args 0) :port (Long/parseLong (nth args 1) 10)})
-        mg-db (mg/get-db mg-conn (nth args 2))
-        datomic-conn (d/connect (nth args 3))
+  (let [mg-uri-res (mg/connect-via-uri (nth args 0))
+        mg-conn (:conn mg-uri-res)
+        mg-db (:db mg-uri-res)
+        datomic-conn (d/connect (nth args 1))
         datomic-db (d/db datomic-conn)]
 
     (let [agreements-without-id
